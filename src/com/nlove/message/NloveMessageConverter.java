@@ -8,16 +8,16 @@ import com.fasterxml.jackson.datatype.jsonorg.JsonOrgModule;
 
 import jsmith.nknsdk.client.NKNClient.ReceivedMessage;
 
-public class NloveMessageParser {
+public class NloveMessageConverter {
 
 	public static String MAGIC_IDENTIFIER = "<<NLOV>>";
 	private String name;
 
-	public NloveMessageParser(String name) {
+	public NloveMessageConverter(String name) {
 		this.name = name;
 	}
 
-	public NloveMessageInterface parse(ReceivedMessage msg) {
+	public NloveMessageInterface parseMsg(ReceivedMessage msg) {
 
 		if (!msg.isText) {
 			return null;
@@ -31,6 +31,9 @@ public class NloveMessageParser {
 
 		if (type.equals(MessageTypeEnum.CHAT.toString())) {
 			return mapper.convertValue(payload, NloveChatMessage.class);
+		}
+		if (type.equals(MessageTypeEnum.SEARCH.toString())) {
+			return mapper.convertValue(payload, NloveSearchMessage.class);
 		}
 
 		return null;

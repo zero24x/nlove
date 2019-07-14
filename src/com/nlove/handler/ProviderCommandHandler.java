@@ -12,6 +12,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.ByteString;
+import com.nlove.message.NloveMessageConverter;
+import com.nlove.message.NloveMessageInterface;
+import com.nlove.message.NloveSearchMessage;
 import com.nlove.searcher.Searcher;
 
 import jsmith.nknsdk.client.Identity;
@@ -31,6 +34,7 @@ public class ProviderCommandHandler {
 	private static Integer previousHeight = 0;
 	private static Integer subcribeDurationBlocks = 1000;
 	private static String providerTopic = "nlove-providers";
+	private NloveMessageConverter nloveMessageConverter = new NloveMessageConverter("PROVIDER");
 
 	private static final Logger LOG = LoggerFactory.getLogger(ProviderCommandHandler.class);
 
@@ -95,35 +99,16 @@ public class ProviderCommandHandler {
 	}
 
 	private String handle(ReceivedMessage receivedMessage) {
+		NloveMessageInterface c = this.nloveMessageConverter.parseMsg(receivedMessage);
 
-		String res = "UNKNOWN_COMMAND";
-
-		/*
-		 * if (!receivedMessage.isText ||
-		 * !receivedMessage.textData.startsWith(NloveMessage.MAGIC_IDENTIFIER)) { return
-		 * res; }
-		 */
-
-		String msg = receivedMessage.textData.substring(8);
-
-		LOG.info("PROVIDER: Received command " + msg);
-
-		if (receivedMessage.isText) {
-
-			if (msg.startsWith("SEARCH")) {
-				res = this.handleSearch(msg);
-			}
-			if (msg.startsWith("DOWNLOAD")) {
-				res = this.handleDownload(msg.substring(9), receivedMessage);
-			}
+		if (c instanceof NloveSearchMessage) {
+			return this.handleSearch(((NloveSearchMessage) c).getTerm());
 		}
 
-		LOG.info("PROVIDER: Replying to command " + msg + " with: \n" + res);
-		return res;
+		return "UNKNOWN_COMMAND";
 	}
 
-	private String handleSearch(String textData) {
-		String searchTerm = textData.substring(7);
+	private String handleSearch(String searchTerm) {
 
 		if (this.isBlacklistedTerm(searchTerm)) {
 			return "Blacklisted search term!";

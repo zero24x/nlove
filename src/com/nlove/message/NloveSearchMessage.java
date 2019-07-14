@@ -3,7 +3,6 @@ package com.nlove.message;
 public class NloveSearchMessage implements NloveMessageInterface {
 
 	private String term;
-	static String TYPE = "SEARCH";
 
 	public MessageTypeEnum getMessageType() {
 		return MessageTypeEnum.SEARCH;
