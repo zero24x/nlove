@@ -34,7 +34,7 @@ public class Main {
 
 		setupLogging(TPLogger.DEBUG);
 
-		final String lobbyTopic = "nlove-lobby2";
+		final String lobbyTopic = "nlove-lobby";
 
 		final NKNExplorer.Subscriber[] subscribers = NKNExplorer.getSubscribers(lobbyTopic, 0);
 

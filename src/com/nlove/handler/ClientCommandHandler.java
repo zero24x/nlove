@@ -6,7 +6,9 @@ import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.nlove.message.NloveMessage;
+import com.nlove.message.NloveChatMessage;
+import com.nlove.message.NloveMessageInterface;
+import com.nlove.message.NloveMessageParser;
 
 import jsmith.nknsdk.client.Identity;
 import jsmith.nknsdk.client.NKNClient;
@@ -16,16 +18,17 @@ import jsmith.nknsdk.network.NknHttpApiException;
 import jsmith.nknsdk.wallet.Wallet;
 import jsmith.nknsdk.wallet.WalletException;
 
-public class ClientCommandHandler {
+public class ClientCommandHandler<NloveDownloadRequestMessage> {
 
 	private NKNClient client;
-	private Identity pchIdentity;
+	private Identity identity;
 	static String CLIENT_IDENTIFIER = "nlove-client";
 	private Wallet wallet;
 	private static Integer previousHeight = 0;
 	private static Integer subcribeDurationBlocks = 1000;
-	private static String lobbyTopic = "nlove-lobby2";
+	private static String lobbyTopic = "nlove-lobby";
 	private static String providerTopic = "nlove-providers";
+	private NloveMessageParser nloveMessageParser = new NloveMessageParser("CLIENT");
 
 	private static final Logger LOG = LoggerFactory.getLogger(ClientCommandHandler.class);
 
@@ -39,8 +42,8 @@ public class ClientCommandHandler {
 		final Wallet wallet = Wallet.load(walletFile, "");
 		this.wallet = wallet;
 
-		this.pchIdentity = new Identity(ClientCommandHandler.CLIENT_IDENTIFIER, wallet);
-		this.client = new NKNClient(this.pchIdentity);
+		this.identity = new Identity(ClientCommandHandler.CLIENT_IDENTIFIER, wallet);
+		this.client = new NKNClient(this.identity);
 
 		this.client.onNewMessage(msg -> {
 			this.handle(msg);
@@ -53,7 +56,7 @@ public class ClientCommandHandler {
 	public void subscribe() throws WalletException {
 		try {
 
-			Identity clientIdentity = new Identity(CLIENT_IDENTIFIER, Wallet.createNew());
+			Identity clientIdentity = new Identity(CLIENT_IDENTIFIER, this.wallet);
 
 			System.out.println("Subscribing to topic '" + lobbyTopic + "' using " + CLIENT_IDENTIFIER
 					+ (CLIENT_IDENTIFIER == null || CLIENT_IDENTIFIER.isEmpty() ? "" : ".")
@@ -95,39 +98,36 @@ public class ClientCommandHandler {
 
 	private void handle(ReceivedMessage receivedMessage) {
 
-		String res = "UNKNOWN_COMMAND";
+		NloveMessageInterface c = this.nloveMessageParser.parse(receivedMessage);
 
-		if (!receivedMessage.isText && !receivedMessage.textData.startsWith(NloveMessage.MAGIC_IDENTIFIER)) {
-			return;
-		}
-
-		String msg = receivedMessage.textData.substring(8);
-
-		LOG.info("CLIENT: Received command " + msg);
-
-		if (receivedMessage.isText) {
-			if (msg.startsWith("CHAT")) {
-				LOG.info(String.format("(Chat) <%s>: %s", receivedMessage.from, msg.substring(5)));
-			}
+		if (c instanceof NloveChatMessage) {
+			LOG.info(String.format("(Chat) <%s>: %s", receivedMessage.from, ((NloveChatMessage) c).getText()));
 		}
 
 	}
 
 	public void search(String term) throws WalletException {
-		this.client.publishTextMessageAsync(providerTopic, 0, new NloveMessage().search(term));
+		// this.client.publishTextMessageAsync(providerTopic, 0, new
+		// NloveMessage().search(term));
 	}
 
 	public void download(String id) {
 		String[] idParts = id.split("/");
 
 		String destination = idParts[0];
-		String fileId = idParts[1];
+		String fileId = id.substring(id.indexOf("/") + 1);
 
-		this.client.sendTextMessageAsync(destination, new NloveMessage().download(fileId));
+		// NloveMessageContainer c = new NloveDownloadRequestMessage();
+		// msg.setFileID(fileId);
+
+		this.client.sendTextMessageAsync(destination, ""); // NloveMessageParser.toMsgString(msg)
 	}
 
 	public void chat(String text) throws WalletException {
-		this.client.publishTextMessageAsync(ClientCommandHandler.providerTopic, 0, new NloveMessage().chat(text));
+		NloveChatMessage c = new NloveChatMessage();
+		c.setText(text);
+
+		this.client.publishTextMessageAsync(ClientCommandHandler.lobbyTopic, 0, this.nloveMessageParser.toMsgString(c));
 	}
 
 }

@@ -33,14 +33,23 @@ public class Searcher {
 		Stream<Path> stream;
 		try {
 			stream = Files.find(Paths.get(System.getProperty("user.dir"), "share"), Integer.MAX_VALUE,
-					(path, attrs) -> attrs.isRegularFile()
-							&& SHARE_DIR_PATH.relativize(path.getFileName()).toString().contains(term));
+					(path, attrs) -> {
+						if (!attrs.isRegularFile()) {
+							return false;
+						}
+						if ((SHARE_DIR_PATH.relativize(path).toString().contains(term))) {
+							return true;
+						}
+
+						return false;
+
+					});
 
 			this.matches = stream.map(x -> {
-				String fileSize = FileUtils.byteCountToDisplaySize(FileUtils.sizeOf(x.getFileName().toFile()));
+				String fileSize = FileUtils.byteCountToDisplaySize(FileUtils.sizeOf(x.toFile()));
 
 				return String.format("%s/%s (%s)", providerIdentity.getFullIdentifier(),
-						SHARE_DIR_PATH.relativize(x).toString().replace("\\", "/"));
+						SHARE_DIR_PATH.relativize(x).toString().replace("\\", "/"), fileSize);
 			}).collect(Collectors.toList());
 
 		} catch (

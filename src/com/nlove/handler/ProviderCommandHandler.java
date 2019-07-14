@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.protobuf.ByteString;
-import com.nlove.message.NloveMessage;
 import com.nlove.searcher.Searcher;
 
 import jsmith.nknsdk.client.Identity;
@@ -26,7 +25,7 @@ import jsmith.nknsdk.wallet.WalletException;
 public class ProviderCommandHandler {
 
 	private NKNClient client;
-	private Identity pchIdentity;
+	private Identity identity;
 	static String CLIENT_IDENTIFIER = "nlove-provider";
 	private Wallet wallet;
 	private static Integer previousHeight = 0;
@@ -44,8 +43,8 @@ public class ProviderCommandHandler {
 		final Wallet wallet = Wallet.load(walletFile, "");
 		this.wallet = wallet;
 
-		this.pchIdentity = new Identity(ClientCommandHandler.CLIENT_IDENTIFIER, wallet);
-		this.client = new NKNClient(this.pchIdentity);
+		this.identity = new Identity(ProviderCommandHandler.CLIENT_IDENTIFIER, wallet);
+		this.client = new NKNClient(this.identity);
 
 		this.client.onNewMessageWithReply(msg -> {
 			return this.handle(msg);
@@ -57,9 +56,6 @@ public class ProviderCommandHandler {
 
 	public void subscribe() throws WalletException {
 		try {
-
-			Identity clientIdentity = new Identity(CLIENT_IDENTIFIER, Wallet.createNew());
-
 			System.out.println("Subscribing to topic '" + providerTopic + "' using " + CLIENT_IDENTIFIER
 					+ (CLIENT_IDENTIFIER == null || CLIENT_IDENTIFIER.isEmpty() ? "" : ".")
 					+ Hex.toHexString(this.wallet.getPublicKey()));
@@ -102,9 +98,11 @@ public class ProviderCommandHandler {
 
 		String res = "UNKNOWN_COMMAND";
 
-		if (!receivedMessage.isText || !receivedMessage.textData.startsWith(NloveMessage.MAGIC_IDENTIFIER)) {
-			return res;
-		}
+		/*
+		 * if (!receivedMessage.isText ||
+		 * !receivedMessage.textData.startsWith(NloveMessage.MAGIC_IDENTIFIER)) { return
+		 * res; }
+		 */
 
 		String msg = receivedMessage.textData.substring(8);
 
@@ -132,14 +130,14 @@ public class ProviderCommandHandler {
 		}
 
 		Searcher se = new Searcher();
-		String res = se.searchFor(searchTerm, this.pchIdentity);
+		String res = se.searchFor(searchTerm, this.identity);
 
 		return res;
 	}
 
 	private Boolean isBlacklistedTerm(String term) {
-		File blacklistFile = Paths.get(Searcher.SHARE_DIR_PATH.toString(), File.pathSeparator.toString(), "config",
-				File.pathSeparator.toString(), "blacklist.xt").toFile();
+		File blacklistFile = Paths.get(System.getProperty("user.dir"), File.separator.toString(), "config",
+				File.separator.toString(), "blacklist.txt").toFile();
 		Scanner sc = null;
 
 		try {
@@ -149,12 +147,8 @@ public class ProviderCommandHandler {
 			e.printStackTrace();
 		}
 
-		if (sc == null) {
-			return true;
-		}
-
 		while (sc.hasNextLine()) {
-			if (sc.nextLine().contains(term)) {
+			if (sc.nextLine().equals(term)) {
 				return true;
 			}
 		}
@@ -168,8 +162,8 @@ public class ProviderCommandHandler {
 
 		File destFile = Paths.get(Searcher.SHARE_DIR_PATH.toString(), file).toFile();
 
-		if (!destFile.isFile() || destFile.exists() || destFile.canRead()) {
-			this.client.sendTextMessageAsync(msg.from, "File " + file + " not found!");
+		if (!destFile.isFile() || !destFile.exists() || !destFile.canRead()) {
+			this.client.sendTextMessageAsync(msg.from, "File " + file + " not found or inaccessible!");
 			return "FILE_NOT_FOUND";
 		}
 
