@@ -1,44 +1,59 @@
 package com.nlove.searcher;
 
-import java.awt.List;
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import jsmith.nknsdk.client.Identity;
+import jsmith.nknsdk.client.NKNClient;
 
 public class Searcher {
 
-	public void searchFor(String term)  {
-		
-        File root = Paths.get( System.getProperty("user.dir"),"share").toFile();
-        File[] list = root.listFiles();
-        
-        LinkedList<String> matches = new LinkedList<String>();
+	private static final Logger LOG = LoggerFactory.getLogger(NKNClient.class);
 
-        if (list == null) return;
+	private List<String> matches;
+	private String term;
+	public static Path SHARE_DIR_PATH = Paths.get(System.getProperty("user.dir"), "share");
 
-        for ( File f : list ) {
-            if ( f.isDirectory() ) {
-                walk( f.getAbsolutePath() );       
-            }
-            else {
-                System.out.println( "found match:" + f.getAbsoluteFile() );
-            }
-        }
-        
+	public String searchFor(String term, Identity providerIdentity) {
+
+		this.term = term;
+
+		this.matches = new LinkedList<String>();
+
+		Stream<Path> stream;
+		try {
+			stream = Files.find(Paths.get(System.getProperty("user.dir"), "share"), Integer.MAX_VALUE,
+					(path, attrs) -> attrs.isRegularFile()
+							&& SHARE_DIR_PATH.relativize(path.getFileName()).toString().contains(term));
+
+			this.matches = stream.map(x -> {
+				String fileSize = FileUtils.byteCountToDisplaySize(FileUtils.sizeOf(x.getFileName().toFile()));
+
+				return String.format("%s/%s (%s)", providerIdentity.getFullIdentifier(),
+						SHARE_DIR_PATH.relativize(x).toString().replace("\\", "/"));
+			}).collect(Collectors.toList());
+
+		} catch (
+
+		IOException e) {
+			LOG.error(e.toString());
+		}
+
+		if (this.matches.isEmpty()) {
+			return "Nothing found!";
+		}
+
+		return String.join("\n", this.matches);
 	}
-	
-    private void walk( String path ) {
 
-        File root = new File( path );
-        File[] list = root.listFiles();
-
-        if (list == null) return;
-
-        for ( File f : list ) {
-            if ( f.isFile())
-                System.out.println( "File:" + f.getAbsoluteFile() );
-            }
-        }
-    }
-
+}

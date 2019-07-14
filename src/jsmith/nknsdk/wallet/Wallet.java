@@ -5,6 +5,7 @@ import com.iwebpp.crypto.TweetNaclFast;
 import jsmith.nknsdk.client.NKNExplorer;
 import jsmith.nknsdk.network.ConnectionProvider;
 import jsmith.nknsdk.network.HttpApi;
+import jsmith.nknsdk.network.NknHttpApiException;
 import jsmith.nknsdk.utils.Crypto;
 import jsmith.nknsdk.utils.EdToCurve;
 import jsmith.nknsdk.wallet.transactions.TransactionT;
@@ -143,12 +144,13 @@ public class Wallet {
         }
     }
 
-    public String submitTransaction(TransactionT tx) throws WalletException {
+    public String submitTransaction(TransactionT tx) throws WalletException, NknHttpApiException {
         final String txRaw = Hex.toHexString(tx.build((EdDSAPrivateKey) keyPair.getPrivate(), ByteString.copyFrom(WalletUtils.getSignatureRedeemFromPublicKey(getPublicKey()))).toByteArray());
         try {
             return ConnectionProvider.attempt((bootstrapNode) -> HttpApi.sendRawTransaction(bootstrapNode, txRaw));
         } catch (Exception t) {
             if (t instanceof WalletException) throw (WalletException) t;
+            if (t instanceof NknHttpApiException) throw (NknHttpApiException) t;
             throw new WalletException("Failed to send transaction", t);
         }
     }

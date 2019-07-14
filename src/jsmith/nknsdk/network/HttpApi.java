@@ -5,6 +5,7 @@ import com.darkyen.dave.ResponseTranslator;
 import com.darkyen.dave.Webb;
 import jsmith.nknsdk.client.NKNExplorer;
 import org.bouncycastle.util.encoders.Hex;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,16 +81,21 @@ public class HttpApi {
         return nonce;
     }
 
-    public static void sendRawTransaction(InetSocketAddress server, byte[] tx) {
+    public static void sendRawTransaction(InetSocketAddress server, byte[] tx) throws JSONException, NknHttpApiException {
         sendRawTransaction(server, Hex.toHexString(tx));
     }
-    public static String sendRawTransaction(InetSocketAddress server, String tx) {
+    
+    public static String sendRawTransaction(InetSocketAddress server, String tx) throws JSONException, NknHttpApiException {
         final JSONObject params = new JSONObject();
         params.put("tx", tx);
 
         final JSONObject response = rpcCallJson(server, "sendrawtransaction", params);
+        
+        if (response.has("error")) {
+        	throw new NknHttpApiException(response.getJSONObject("error").getInt("code"),response.getJSONObject("error").getString("data"));
+        }
 
-        return response.has("error") ? null : response.getString("result");
+        return response.getString("result");
     }
 
     public static String resolveName(InetSocketAddress server, String name) {

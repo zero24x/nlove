@@ -4,6 +4,7 @@ import com.google.protobuf.ByteString;
 import jsmith.nknsdk.client.NKNExplorer;
 import jsmith.nknsdk.network.ConnectionProvider;
 import jsmith.nknsdk.network.HttpApi;
+import jsmith.nknsdk.network.NknHttpApiException;
 import jsmith.nknsdk.wallet.transactions.NameServiceT;
 import jsmith.nknsdk.wallet.transactions.SubscribeT;
 import jsmith.nknsdk.wallet.transactions.TransactionT;
@@ -16,111 +17,123 @@ import java.math.BigDecimal;
  */
 public class NKNTransaction {
 
-    private final Wallet w;
-    NKNTransaction(Wallet wallet) {
-        this.w = wallet;
-    }
+	private final Wallet w;
 
-    public String registerName(String name) throws WalletException {
-        return registerName(name, BigDecimal.ZERO);
-    }
+	NKNTransaction(Wallet wallet) {
+		this.w = wallet;
+	}
 
-    public String registerName(String name, BigDecimal fee) throws WalletException {
-        final NameServiceT nameServiceT = new NameServiceT();
+	public String registerName(String name) throws WalletException, NknHttpApiException {
+		return registerName(name, BigDecimal.ZERO);
+	}
 
-        nameServiceT.setName(name);
-        nameServiceT.setPublicKey(ByteString.copyFrom(w.getPublicKey()));
-        nameServiceT.setNameServiceType(NameServiceT.NameServiceType.REGISTER);
+	public String registerName(String name, BigDecimal fee) throws WalletException, NknHttpApiException {
+		final NameServiceT nameServiceT = new NameServiceT();
 
-        return submitTransaction(nameServiceT, fee);
-    }
+		nameServiceT.setName(name);
+		nameServiceT.setPublicKey(ByteString.copyFrom(w.getPublicKey()));
+		nameServiceT.setNameServiceType(NameServiceT.NameServiceType.REGISTER);
 
-    public String deleteName(String name) throws WalletException {
-        return deleteName(name, BigDecimal.ZERO);
-    }
+		return submitTransaction(nameServiceT, fee);
+	}
 
-    public String deleteName(String name, BigDecimal fee) throws WalletException {
-        final NameServiceT nameServiceT = new NameServiceT();
+	public String deleteName(String name) throws WalletException, NknHttpApiException {
+		return deleteName(name, BigDecimal.ZERO);
+	}
 
-        nameServiceT.setName(name);
-        nameServiceT.setPublicKey(ByteString.copyFrom(w.getPublicKey()));
-        nameServiceT.setNameServiceType(NameServiceT.NameServiceType.DELETE);
+	public String deleteName(String name, BigDecimal fee) throws WalletException, NknHttpApiException {
+		final NameServiceT nameServiceT = new NameServiceT();
 
-        return submitTransaction(nameServiceT, fee);
-    }
+		nameServiceT.setName(name);
+		nameServiceT.setPublicKey(ByteString.copyFrom(w.getPublicKey()));
+		nameServiceT.setNameServiceType(NameServiceT.NameServiceType.DELETE);
 
-    public String transferTo(String toAddress, BigDecimal amount) throws WalletException {
-        return transferTo(toAddress, amount, BigDecimal.ZERO);
-    }
+		return submitTransaction(nameServiceT, fee);
+	}
 
-    public String transferTo(String toAddress, BigDecimal amount, BigDecimal fee) throws WalletException {
-        if (!NKNExplorer.isAddressValid(toAddress)) throw new WalletException("Transaction failed: Target address is not valid");
+	public String transferTo(String toAddress, BigDecimal amount) throws WalletException, NknHttpApiException {
+		return transferTo(toAddress, amount, BigDecimal.ZERO);
+	}
 
-        final TransferToT transferToT = new TransferToT();
+	public String transferTo(String toAddress, BigDecimal amount, BigDecimal fee) throws WalletException, NknHttpApiException {
+		if (!NKNExplorer.isAddressValid(toAddress))
+			throw new WalletException("Transaction failed: Target address is not valid");
 
-        transferToT.setSenderProgramHash(w.getProgramHash());
-        transferToT.setRecipientAddress(toAddress);
-        transferToT.setAmountLongValue(amount.multiply(new BigDecimal(100000000)).longValue());
+		final TransferToT transferToT = new TransferToT();
 
-        return submitTransaction(transferToT, fee);
-    }
+		transferToT.setSenderProgramHash(w.getProgramHash());
+		transferToT.setRecipientAddress(toAddress);
+		transferToT.setAmountLongValue(amount.multiply(new BigDecimal(100000000)).longValue());
 
-    public String subscribe(String topic, int bucket, int duration) throws WalletException {
-        return subscribe(topic, bucket, duration, BigDecimal.ZERO);
-    }
-    public String subscribe(String topic, int bucket, int duration, String clientIdentifier) throws WalletException {
-        return subscribe(topic, bucket, duration, clientIdentifier, BigDecimal.ZERO);
-    }
-    public String subscribe(String topic, int bucket, int duration, String clientIdentifier, String meta) throws WalletException {
-        return subscribe(topic, bucket, duration, clientIdentifier, meta, BigDecimal.ZERO);
-    }
+		return submitTransaction(transferToT, fee);
+	}
 
-    public String subscribe(String topic, int bucket, int duration, BigDecimal fee) throws WalletException {
-        return subscribe(topic, bucket, duration, null, null, fee);
-    }
-    public String subscribe(String topic, int bucket, int duration, String clientIdentifier, BigDecimal fee) throws WalletException {
-        return subscribe(topic, bucket, duration, clientIdentifier, null, fee);
-    }
+	public String subscribe(String topic, int bucket, int duration) throws WalletException, NknHttpApiException {
+		return subscribe(topic, bucket, duration, BigDecimal.ZERO);
+	}
 
-    public String subscribe(String topic, int bucket, int duration, String clientIdentifier, String meta, BigDecimal fee) throws WalletException {
-        final SubscribeT subscribeT = new SubscribeT();
+	public String subscribe(String topic, int bucket, int duration, String clientIdentifier) throws WalletException, NknHttpApiException {
+		return subscribe(topic, bucket, duration, clientIdentifier, BigDecimal.ZERO);
+	}
 
-        subscribeT.setPublicKey(ByteString.copyFrom(w.getPublicKey()));
-        subscribeT.setTopic(topic);
-        subscribeT.setBucket(bucket);
-        subscribeT.setDuration(duration);
-        subscribeT.setIdentifier(clientIdentifier == null ? "" : clientIdentifier);
-        subscribeT.setMeta(meta == null ? "" : meta);
+	public String subscribe(String topic, int bucket, int duration, String clientIdentifier, String meta)
+			throws WalletException, NknHttpApiException {
+		return subscribe(topic, bucket, duration, clientIdentifier, meta, BigDecimal.ZERO);
+	}
 
-        return submitTransaction(subscribeT, fee);
-    }
+	public String subscribe(String topic, int bucket, int duration, BigDecimal fee) throws WalletException, NknHttpApiException {
+		return subscribe(topic, bucket, duration, null, null, fee);
+	}
 
+	public String subscribe(String topic, int bucket, int duration, String clientIdentifier, BigDecimal fee)
+			throws WalletException, NknHttpApiException {
+		return subscribe(topic, bucket, duration, clientIdentifier, null, fee);
+	}
 
+	public String subscribe(String topic, int bucket, int duration, String clientIdentifier, String meta,
+			BigDecimal fee) throws WalletException, NknHttpApiException {
+		final SubscribeT subscribeT = new SubscribeT();
 
-    private String submitTransaction(TransactionT tx, BigDecimal fee) throws WalletException {
-        tx.setNonce(nextNonce());
-        tx.setFeeInLongValue(fee.multiply(new BigDecimal(100000000)).longValue());
+		subscribeT.setPublicKey(ByteString.copyFrom(w.getPublicKey()));
+		subscribeT.setTopic(topic);
+		subscribeT.setBucket(bucket);
+		subscribeT.setDuration(duration);
+		subscribeT.setIdentifier(clientIdentifier == null ? "" : clientIdentifier);
+		subscribeT.setMeta(meta == null ? "" : meta);
 
-        return w.submitTransaction(tx);
-    }
+		try {
+			return submitTransaction(subscribeT, fee);
+		} catch (RuntimeException $e) {
+			throw $e;
+		}
+	}
 
-    private long nextNonce() throws WalletException {
-        long nonce;
+	private String submitTransaction(TransactionT tx, BigDecimal fee) throws WalletException, NknHttpApiException {
+		tx.setNonce(nextNonce());
+		tx.setFeeInLongValue(fee.multiply(new BigDecimal(100000000)).longValue());
 
-        try {
-            nonce = ConnectionProvider.attempt((node) -> HttpApi.getNonce(node, w.getAddress()));
-        } catch (Throwable t) {
-            if (t instanceof WalletException) throw (WalletException) t;
-            throw new WalletException("Transaction failed: Failed to query nonce", t);
-        }
+		return w.submitTransaction(tx);
+	}
 
-        return nonce;
-    }
+	private long nextNonce() throws WalletException {
+		long nonce;
 
-    public String customTransaction(TransactionT tx) throws WalletException {
-        return customTransaction(tx, BigDecimal.ZERO);
-    }
-    public String customTransaction(TransactionT tx, BigDecimal fee) throws WalletException {
-        return submitTransaction(tx, fee);
-    }
+		try {
+			nonce = ConnectionProvider.attempt((node) -> HttpApi.getNonce(node, w.getAddress()));
+		} catch (Throwable t) {
+			if (t instanceof WalletException)
+				throw (WalletException) t;
+			throw new WalletException("Transaction failed: Failed to query nonce", t);
+		}
+
+		return nonce;
+	}
+
+	public String customTransaction(TransactionT tx) throws WalletException, NknHttpApiException {
+		return customTransaction(tx, BigDecimal.ZERO);
+	}
+
+	public String customTransaction(TransactionT tx, BigDecimal fee) throws WalletException, NknHttpApiException {
+		return submitTransaction(tx, fee);
+	}
 }

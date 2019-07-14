@@ -2,6 +2,7 @@ package jsmith.nknsdk.examples;
 
 import com.darkyen.tproll.TPLogger;
 import jsmith.nknsdk.client.NKNExplorer;
+import jsmith.nknsdk.network.NknHttpApiException;
 import jsmith.nknsdk.wallet.Wallet;
 import jsmith.nknsdk.wallet.WalletException;
 
@@ -15,7 +16,7 @@ import static jsmith.nknsdk.examples.LogUtils.setupLogging;
  */
 public class WalletEx {
 
-    public static void main(String[] args) throws WalletException {
+    public static void main(String[] args) throws WalletException, NknHttpApiException {
         setupLogging(TPLogger.DEBUG);
 
         final Wallet w = Wallet.createNew();

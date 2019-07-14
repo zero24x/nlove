@@ -6,6 +6,7 @@ import jsmith.nknsdk.client.NKNClient;
 import jsmith.nknsdk.client.NKNClientException;
 import jsmith.nknsdk.client.NKNExplorer;
 import jsmith.nknsdk.network.HttpApi;
+import jsmith.nknsdk.network.NknHttpApiException;
 import jsmith.nknsdk.wallet.Wallet;
 import jsmith.nknsdk.wallet.WalletException;
 import jsmith.nknsdk.wallet.WalletUtils;
@@ -18,7 +19,7 @@ import static jsmith.nknsdk.examples.LogUtils.setupLogging;
 
 public class MainTest {
 
-	public static void main(String[] args) throws NKNClientException, WalletException, InterruptedException {
+	public static void main(String[] args) throws NKNClientException, WalletException, InterruptedException, NknHttpApiException {
 	       setupLogging(TPLogger.DEBUG);
 
 	        final File walletFile = new File("pubsub.dat");

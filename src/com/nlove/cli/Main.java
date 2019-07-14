@@ -1,44 +1,40 @@
 package com.nlove.cli;
 
-import com.darkyen.tproll.TPLogger;
-import com.nlove.command.NloveCommand;
-import com.nlove.handler.ProviderCommandHandler;
-
-import jsmith.nknsdk.client.Identity;
-import jsmith.nknsdk.client.NKNClient;
-import jsmith.nknsdk.client.NKNClientException;
-import jsmith.nknsdk.client.NKNExplorer;
-import jsmith.nknsdk.network.HttpApi;
-import jsmith.nknsdk.wallet.Wallet;
-import jsmith.nknsdk.wallet.WalletException;
-import jsmith.nknsdk.wallet.WalletUtils;
-import org.bouncycastle.util.encoders.Hex;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static jsmith.nknsdk.examples.LogUtils.setupLogging;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.math.BigDecimal;
 
-import static jsmith.nknsdk.examples.LogUtils.setupLogging;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.darkyen.tproll.TPLogger;
+import com.nlove.handler.ClientCommandHandler;
+import com.nlove.handler.ProviderCommandHandler;
+
+import jsmith.nknsdk.client.NKNClientException;
+import jsmith.nknsdk.client.NKNExplorer;
+import jsmith.nknsdk.wallet.WalletException;
 
 public class Main {
-	
-	private static final Logger LOG = LoggerFactory.getLogger(NKNClient.class);
 
-	public static void main(String[] args) throws NKNClientException, WalletException, InterruptedException, IOException {
+	private static final Logger LOG = LoggerFactory.getLogger(Main.class);
+
+	public static void main(String[] args)
+			throws NKNClientException, WalletException, InterruptedException, IOException {
+
+		final String helpText = "Welcome to nlove! Important commands: \n" + "help --> View this command help"
+				+ "search <searchterm> --> Search for providers offering files with  \"kitties\" in the name\n"
+				+ "download <filepath> --> Download a certain file provided by any provider\n"
+				+ "chat <message> --> Write a public message in the lobby chat\n"
+				+ "Note: To start providing files, simply put them in the \"share\" subfolder.";
+		System.out.println(helpText);
 
 		setupLogging(TPLogger.DEBUG);
 
-		final File walletFile = new File("pubsub.dat");
-
-		if (!walletFile.exists())
-			Wallet.createNew().save(walletFile, "pwd");
-
-		final Wallet pubsubWallet = Wallet.load(walletFile, "pwd");
-		final String lobbyTopic = "nlove-lobby";
+		final String lobbyTopic = "nlove-lobby2";
 
 		final NKNExplorer.Subscriber[] subscribers = NKNExplorer.getSubscribers(lobbyTopic, 0);
 
@@ -48,50 +44,44 @@ public class Main {
 		}
 		LOG.info("Total: " + subscribers.length + " subs");
 
-		final String identifier = "clientA";
+		ClientCommandHandler cch = new ClientCommandHandler();
+		cch.start();
 
-		System.out.println("Subscribing to '" + lobbyTopic + "' using " + identifier
-				+ (identifier == null || identifier.isEmpty() ? "" : ".")
-				+ Hex.toHexString(pubsubWallet.getPublicKey()));
-		final String txID = pubsubWallet.tx().subscribe(lobbyTopic, 0, 50, identifier, (String) null);
+		InputStreamReader in = new InputStreamReader(System.in);
+		BufferedReader br = new BufferedReader(in);
 
-		if (txID == null) {
-			LOG.error("Subscribe transaction failed");
-			System.exit(1);
+		File shareFolder = new File(System.getProperty("user.dir"));
+
+		Boolean startProvider = shareFolder.exists() && shareFolder.isDirectory() && shareFolder.list().length > 0;
+		ProviderCommandHandler pch = null;
+
+		if (startProvider) {
+			pch = new ProviderCommandHandler();
+			pch.start();
+
 		} else {
-			LOG.info("Subscribe transaction successful: " + txID);
+			LOG.info("PROVIDER: Not starting, \"shared\" directory missing or empty.");
 		}
 
-		 InputStreamReader in = new InputStreamReader(System.in);
-         BufferedReader br = new BufferedReader(in);
-         
-         System.out.println("Please type one of these commands: \n"
-         		+ "search <kitties> --> Search for providers offering files with  \"kitties\" in the name"
-        		+ "startProvider --> Start providing all files in the subfolder \"share\" for others to search & download"
-        		 );
-         
-         Identity clientIdentity = new Identity(identifier, pubsubWallet);
-        NKNClient clientClient =  new NKNClient(new Identity(null, Wallet.createNew())).start();
-         
-         while (true) {
-        	 String line = br.readLine();
-        	 String[] splitted = line.split("\\s+");
-        	 
-        	 if (splitted[0] == "search") {
-        		 clientClient.publishTextMessageAsync(lobbyTopic, 0, new NloveCommand().search(splitted[1]));
-        		 
-        	 } else if (splitted[0] == "startProvider" ) {
+		while (true) {
+			String line = br.readLine();
+			String[] splitted = line.split("\\s+");
 
-        			ProviderCommandHandler pch = new ProviderCommandHandler();
-        			Identity pchIdentity = new Identity(identifier, pubsubWallet);
-        			new NKNClient(pchIdentity).onNewMessage(msg -> {
-        				pch.handle(msg);
-        			}).start();
-        			LOG.info("Provider started");
-        	 }
-         }
-        
-	
+			if (splitted[0].equals("search")) {
+				cch.search(splitted[1]);
+				LOG.info("CLIENT: Sent command: search " + splitted[1]);
+
+			} else if (splitted[0].equals("download")) {
+				cch.download(splitted[1]);
+				LOG.info("CLIENT: Sent command: download " + splitted[1]);
+			} else if (splitted[0].equals("chat")) {
+				cch.chat(splitted[1]);
+				LOG.info("CLIENT: Sent command: chat " + splitted[1]);
+			} else if (line.equals("help")) {
+				System.out.println(helpText);
+			} else {
+				System.out.println("Unknown command, please read help: " + helpText);
+			}
+		}
 	}
-
 }

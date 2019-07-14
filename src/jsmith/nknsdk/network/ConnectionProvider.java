@@ -126,6 +126,10 @@ public class ConnectionProvider {
             try {
                 return action.apply(nodes[nextNodeI]);
             } catch (Exception t) {
+            	if (t instanceof NknHttpApiException) {
+            		return null;
+            	}
+            	
                 error = t;
                 LOG.warn("Attempt {} failed", i);
                 LOG.debug("Caused by:", t);
