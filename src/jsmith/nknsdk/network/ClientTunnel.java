@@ -249,6 +249,10 @@ public class ClientTunnel {
 					break;
 				}
 				case "sendRawBlock": {
+					if (this.onCurrentHeightChanged == null) {
+						return;
+					}
+
 					if (json.getInt("Error") == ErrorCodes.SUCCESS) {
 						try {
 							int newHeight = json.getJSONObject("Result").getJSONObject("header").getInt("height");

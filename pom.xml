@@ -75,11 +75,6 @@
 	    <version>1.2</version>
 	</dependency>
 	<dependency>
-		<groupId>org.glassfish.tyrus.bundles</groupId>
-		<artifactId>tyrus-standalone-client-jdk</artifactId>
-		<version>1.15</version>
-	</dependency>
-	<dependency>
 		<groupId>commons-io</groupId>
 		<artifactId>commons-io</artifactId>
 		<version>2.6</version>
@@ -88,6 +83,11 @@
 		<groupId>com.fasterxml.jackson.datatype</groupId>
 		<artifactId>jackson-datatype-json-org</artifactId>
 		<version>2.9.9</version>
+	</dependency>
+	<dependency>
+	    <groupId>org.glassfish.tyrus</groupId>
+	    <artifactId>tyrus-container-jdk-client</artifactId>
+	    <version>1.15</version>
 	</dependency>
   </dependencies>
 </project>

@@ -1,9 +1,11 @@
 package com.nlove.handler;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
 import java.util.Scanner;
 
@@ -11,10 +13,13 @@ import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.protobuf.ByteString;
+import com.nlove.message.NloveDownloadDataMessage;
+import com.nlove.message.NloveDownloadRequestMessage;
+import com.nlove.message.NloveDownloadRequestReplyMessage;
 import com.nlove.message.NloveMessageConverter;
 import com.nlove.message.NloveMessageInterface;
-import com.nlove.message.NloveSearchMessage;
+import com.nlove.message.NloveSearchRequestMessage;
+import com.nlove.message.NloveSearchRequestReplyMessage;
 import com.nlove.searcher.Searcher;
 
 import jsmith.nknsdk.client.Identity;
@@ -29,7 +34,7 @@ public class ProviderCommandHandler {
 
 	private NKNClient client;
 	private Identity identity;
-	static String CLIENT_IDENTIFIER = "nlove-provider";
+	static String CLIENT_IDENTIFIER = "nlove-provider3";
 	private Wallet wallet;
 	private static Integer previousHeight = 0;
 	private static Integer subcribeDurationBlocks = 1000;
@@ -53,9 +58,15 @@ public class ProviderCommandHandler {
 		this.client.onNewMessageWithReply(msg -> {
 			return this.handle(msg);
 		});
-		this.resubscribeChecker();
+
 		this.client.start();
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			public void run() {
+				client.close();
+			}
+		});
 		this.subscribe();
+		this.resubscribeChecker();
 	}
 
 	public void subscribe() throws WalletException {
@@ -101,11 +112,14 @@ public class ProviderCommandHandler {
 	private String handle(ReceivedMessage receivedMessage) {
 		NloveMessageInterface c = this.nloveMessageConverter.parseMsg(receivedMessage);
 
-		if (c instanceof NloveSearchMessage) {
-			return this.handleSearch(((NloveSearchMessage) c).getTerm());
+		if (c instanceof NloveSearchRequestMessage) {
+			return this.handleSearch(((NloveSearchRequestMessage) c).getTerm());
+		} else if (c instanceof NloveDownloadRequestMessage) {
+			this.handleDownload((NloveDownloadRequestMessage) c, receivedMessage);
+			return null;
 		}
 
-		return "UNKNOWN_COMMAND";
+		return null;
 	}
 
 	private String handleSearch(String searchTerm) {
@@ -114,10 +128,15 @@ public class ProviderCommandHandler {
 			return "Blacklisted search term!";
 		}
 
-		Searcher se = new Searcher();
-		String res = se.searchFor(searchTerm, this.identity);
+		String result = new Searcher().searchFor(searchTerm, this.identity);
 
-		return res;
+		String resMsg = this.nloveMessageConverter.toMsgString(new NloveSearchRequestReplyMessage() {
+			{
+				setResult(result);
+			}
+		});
+
+		return resMsg;
 	}
 
 	private Boolean isBlacklistedTerm(String term) {
@@ -140,29 +159,85 @@ public class ProviderCommandHandler {
 		return false;
 	}
 
-	private String handleDownload(String file, ReceivedMessage msg) {
+	private void handleDownload(NloveDownloadRequestMessage m, ReceivedMessage receivedMessage) {
+
+		String fileId = m.getFileId();
+
 		if (File.separator.equals("\\")) {
-			file = file.replace("/", "\\");
+			fileId = fileId.replace("/", "\\");
 		}
 
-		File destFile = Paths.get(Searcher.SHARE_DIR_PATH.toString(), file).toFile();
+		File destFile = Paths.get(Searcher.SHARE_DIR_PATH.toString(), fileId).toFile();
+		NloveDownloadRequestReplyMessage replyM = new NloveDownloadRequestReplyMessage();
 
 		if (!destFile.isFile() || !destFile.exists() || !destFile.canRead()) {
-			this.client.sendTextMessageAsync(msg.from, "File " + file + " not found or inaccessible!");
-			return "FILE_NOT_FOUND";
+			replyM.setError("File " + fileId + " not found or inaccessible!");
+			this.client.sendTextMessageAsync(receivedMessage.from, this.nloveMessageConverter.toMsgString(replyM));
+			return;
 		}
 
-		InputStream initialStream;
+		RandomAccessFile aFile;
+		long fLen = 0;
 
 		try {
-			initialStream = new FileInputStream(destFile);
-			this.client.sendBinaryMessageAsync(msg.from, ByteString.readFrom(initialStream));
-			return "FILE_ON_THE_WAY";
-		} catch (Exception e) {
-			this.client.sendTextMessageAsync(msg.from, "File " + file + " could not be sent, error: " + e.toString());
-			return "FILE_SEND_ERROR";
+			aFile = new RandomAccessFile(destFile, "r");
+			fLen = aFile.length();
+			replyM.setFileSizeBytes(fLen);
+		} catch (IOException e1) {
+			replyM.setError("Error reading file " + fileId + " :" + e1.toString());
+			this.client.sendTextMessageAsync(receivedMessage.from, this.nloveMessageConverter.toMsgString(replyM));
+			return;
 		}
 
-	}
+		final long detectedFlen = new Long(fLen);
 
+		this.client.sendTextMessageAsync(receivedMessage.from, receivedMessage.msgId,
+				this.nloveMessageConverter.toMsgString(replyM)).whenComplete((response, error) -> {
+					if (error == null) {
+						FileChannel inChannel = aFile.getChannel();
+						ByteBuffer buffer = ByteBuffer.allocate(1024);
+						long offset = 0;
+
+						long totalBytesRead = 0;
+
+						while (totalBytesRead < detectedFlen) {
+							try {
+								totalBytesRead += inChannel.read(buffer);
+							} catch (IOException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+
+							buffer.flip();
+							byte[] data = null;
+							buffer.get(data);
+
+							NloveDownloadDataMessage d = new NloveDownloadDataMessage() {
+								{
+									setFileID(m.getFileId());
+									setOffset(offset);
+									setData(data);
+								}
+							};
+
+							this.client.sendTextMessageAsync(receivedMessage.from,
+									this.nloveMessageConverter.toMsgString(d));
+
+							buffer.clear();
+						}
+
+						try {
+							inChannel.close();
+							aFile.close();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+
+					} else {
+						error.printStackTrace();
+					}
+				});
+
+	}
 }

@@ -1,11 +1,14 @@
 package com.nlove.download;
 
+import java.nio.file.Path;
+
 public class DownloadRequest {
 
 	private String messageID;
 	private String fileID;
-	private long length;
+	private long fileSizeBytes;
 	private long bytesTransferred;
+	private Path localPath;
 
 	public String getMessageID() {
 		return messageID;
@@ -23,12 +26,12 @@ public class DownloadRequest {
 		this.fileID = fileID;
 	}
 
-	public long getLength() {
-		return length;
+	public long getFileSizeBytes() {
+		return fileSizeBytes;
 	}
 
-	public void setLength(long length) {
-		this.length = length;
+	public void setFileSizeBytes(long fileSizeBytes) {
+		this.fileSizeBytes = fileSizeBytes;
 	}
 
 	public long getBytesTransferred() {
@@ -37,6 +40,14 @@ public class DownloadRequest {
 
 	public void setBytesTransferred(long bytesTransferred) {
 		this.bytesTransferred = bytesTransferred;
+	}
+
+	public Path getLocalPath() {
+		return localPath;
+	}
+
+	public void setLocalPath(Path localPath) {
+		this.localPath = localPath;
 	}
 
 }

@@ -33,7 +33,6 @@ public class PubSubEx {
 
         System.out.println("Balance at " + pubsubWallet.getAddress() + " is " + pubsubWallet.queryBalance() + " tNKN");
 
-
         final String topic = "testtopic";
 
         final NKNExplorer.Subscriber[] subscribers = NKNExplorer.getSubscribers(topic, 0);

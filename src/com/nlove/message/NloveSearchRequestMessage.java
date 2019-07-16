@@ -1,11 +1,11 @@
 package com.nlove.message;
 
-public class NloveSearchMessage implements NloveMessageInterface {
+public class NloveSearchRequestMessage implements NloveMessageInterface {
 
 	private String term;
 
 	public MessageTypeEnum getMessageType() {
-		return MessageTypeEnum.SEARCH;
+		return MessageTypeEnum.SEARCH_REQUEST;
 	}
 
 	public String getTerm() {

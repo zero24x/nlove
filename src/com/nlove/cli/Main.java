@@ -15,7 +15,6 @@ import com.nlove.handler.ClientCommandHandler;
 import com.nlove.handler.ProviderCommandHandler;
 
 import jsmith.nknsdk.client.NKNClientException;
-import jsmith.nknsdk.client.NKNExplorer;
 import jsmith.nknsdk.wallet.WalletException;
 
 public class Main {
@@ -36,13 +35,14 @@ public class Main {
 
 		final String lobbyTopic = "nlove-lobby";
 
-		final NKNExplorer.Subscriber[] subscribers = NKNExplorer.getSubscribers(lobbyTopic, 0);
-
-		LOG.info("Subscribers of '" + lobbyTopic + "':");
-		for (NKNExplorer.Subscriber s : subscribers) {
-			LOG.info("  " + s.fullClientIdentifier + (s.meta.isEmpty() ? "" : ": " + s.meta));
-		}
-		LOG.info("Total: " + subscribers.length + " subs");
+		/*
+		 * final NKNExplorer.Subscriber[] subscribers =
+		 * NKNExplorer.getSubscribers(lobbyTopic, 0);
+		 * 
+		 * LOG.info("Subscribers of '" + lobbyTopic + "':"); for (NKNExplorer.Subscriber
+		 * s : subscribers) { LOG.info("  " + s.fullClientIdentifier + (s.meta.isEmpty()
+		 * ? "" : ": " + s.meta)); } LOG.info("Total: " + subscribers.length + " subs");
+		 */
 
 		ClientCommandHandler cch = new ClientCommandHandler();
 		cch.start();
@@ -58,7 +58,6 @@ public class Main {
 		if (startProvider) {
 			pch = new ProviderCommandHandler();
 			pch.start();
-
 		} else {
 			LOG.info("PROVIDER: Not starting, \"shared\" directory missing or empty.");
 		}

@@ -5,6 +5,15 @@ public class NloveDownloadDataMessage implements NloveMessageInterface {
 	private String fileID;
 	private long offset;
 	private Boolean lastChunk;
+	private byte[] data;
+
+	public byte[] getData() {
+		return data;
+	}
+
+	public void setData(byte[] data) {
+		this.data = data;
+	}
 
 	public MessageTypeEnum getMessageType() {
 		return MessageTypeEnum.DOWNLOAD_DATA;
