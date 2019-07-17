@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.darkyen.tproll.TPLogger;
 import com.nlove.handler.ClientCommandHandler;
 import com.nlove.handler.ProviderCommandHandler;
+import com.nlove.handler.ReverseProxyCommandHandler;
 
 import jsmith.nknsdk.client.NKNClientException;
 import jsmith.nknsdk.wallet.WalletException;
@@ -55,6 +56,9 @@ public class Main {
 		Boolean startProvider = shareFolder.exists() && shareFolder.isDirectory() && shareFolder.list().length > 0;
 		ProviderCommandHandler pch = null;
 
+		ReverseProxyCommandHandler rch = new ReverseProxyCommandHandler();
+		rch.start();
+
 		if (startProvider) {
 			pch = new ProviderCommandHandler();
 			pch.start();
@@ -70,9 +74,9 @@ public class Main {
 				cch.search(splitted[1]);
 				LOG.info("CLIENT: Sent command: search " + splitted[1]);
 
-			} else if (splitted[0].equals("download")) {
-				cch.download(splitted[1]);
-				LOG.info("CLIENT: Sent command: download " + splitted[1]);
+			} else if (splitted[0].equals("connect")) {
+				LOG.info("CLIENT: Got command: connect " + splitted[1]);
+				rch.connectToServiceProvider(splitted[1]);
 			} else if (splitted[0].equals("chat")) {
 				cch.chat(splitted[1]);
 				LOG.info("CLIENT: Sent command: chat " + splitted[1]);
