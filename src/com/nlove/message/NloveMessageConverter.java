@@ -1,10 +1,13 @@
 package com.nlove.message;
 
+import org.bouncycastle.util.Arrays;
 import org.json.JSONObject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsonorg.JsonOrgModule;
+import com.google.protobuf.ByteString;
+import com.nlove.util.ByteUtil;
 
 import jsmith.nknsdk.client.NKNClient.ReceivedMessage;
 
@@ -12,9 +15,11 @@ public class NloveMessageConverter {
 
 	public static String MAGIC_IDENTIFIER = "<<NLOV>>";
 	private String name;
+	private ObjectMapper mapper;
 
 	public NloveMessageConverter(String name) {
 		this.name = name;
+		this.mapper = new ObjectMapper().registerModule(new JsonOrgModule());
 	}
 
 	public NloveMessageInterface parseMsg(ReceivedMessage msg) {
@@ -23,7 +28,6 @@ public class NloveMessageConverter {
 			return null;
 		}
 
-		ObjectMapper mapper = new ObjectMapper().registerModule(new JsonOrgModule());
 		JSONObject jsonMsg = new JSONObject(msg.textData.substring(MAGIC_IDENTIFIER.length()));
 
 		String type = jsonMsg.getString("type");
@@ -41,6 +45,8 @@ public class NloveMessageConverter {
 			return mapper.convertValue(payload, NloveDownloadRequestReplyMessage.class);
 		} else if (type.equals(MessageTypeEnum.DOWNLOAD_DATA.toString())) {
 			return mapper.convertValue(payload, NloveDownloadDataMessage.class);
+		} else if (type.equals(MessageTypeEnum.REVERSE_PROXY_CONNECT.toString())) {
+			return mapper.convertValue(payload, NloveReverseProxyConnectMessage.class);
 		}
 
 		return null;
@@ -52,7 +58,6 @@ public class NloveMessageConverter {
 		c.setPayload(m);
 		c.setType(m.getMessageType());
 
-		ObjectMapper mapper = new ObjectMapper().registerModule(new JsonOrgModule());
 		JSONObject msg = new JSONObject();
 
 		try {
@@ -63,6 +68,34 @@ public class NloveMessageConverter {
 		}
 
 		return null;
+	}
+
+	public byte[] makeHeaderBytes(int clientPort) {
+		NloveMessageHeader header = new NloveMessageHeader();
+		header.setClientPort(clientPort);
+
+		try {
+			byte[] res = (this.mapper.writeValueAsString(header) + NloveMessageConverter.MAGIC_IDENTIFIER).getBytes();
+			return res;
+		} catch (JsonProcessingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
+	public NloveMessageHeader parseHeader(ByteString data) {
+		byte[] fullData = data.toByteArray();
+		int headerEndPos = ByteUtil.indexOf(fullData, NloveMessageConverter.MAGIC_IDENTIFIER.toString().getBytes());
+
+		byte[] header = Arrays.copyOfRange(fullData, 0, headerEndPos);
+
+		String headerString = new String(header);
+		JSONObject headerJson = new JSONObject(headerString);
+
+		NloveMessageHeader res = mapper.convertValue(headerJson, NloveMessageHeader.class);
+		return res;
 	}
 
 }
