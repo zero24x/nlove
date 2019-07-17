@@ -34,7 +34,7 @@ public class ProviderCommandHandler {
 
 	private NKNClient client;
 	private Identity identity;
-	static String CLIENT_IDENTIFIER = "nlove-provider3";
+	static String CLIENT_IDENTIFIER = "nlove-provider";
 	private Wallet wallet;
 	private static Integer previousHeight = 0;
 	private static Integer subcribeDurationBlocks = 1000;
@@ -54,6 +54,7 @@ public class ProviderCommandHandler {
 
 		this.identity = new Identity(ProviderCommandHandler.CLIENT_IDENTIFIER, wallet);
 		this.client = new NKNClient(this.identity);
+		LOG.info("Provider ID: " + this.identity.getFullIdentifier());
 
 		this.client.onNewMessageWithReply(msg -> {
 			return this.handle(msg);

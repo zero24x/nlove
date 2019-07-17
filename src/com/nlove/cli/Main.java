@@ -13,7 +13,8 @@ import org.slf4j.LoggerFactory;
 import com.darkyen.tproll.TPLogger;
 import com.nlove.handler.ClientCommandHandler;
 import com.nlove.handler.ProviderCommandHandler;
-import com.nlove.handler.ReverseProxyCommandHandler;
+import com.nlove.handler.ReverseProxyClientCommandHandler;
+import com.nlove.handler.ReverseProxyProviderCommandHandler;
 
 import jsmith.nknsdk.client.NKNClientException;
 import jsmith.nknsdk.wallet.WalletException;
@@ -32,7 +33,7 @@ public class Main {
 				+ "Note: To start providing files, simply put them in the \"share\" subfolder.";
 		System.out.println(helpText);
 
-		setupLogging(TPLogger.DEBUG);
+		setupLogging(TPLogger.INFO);
 
 		final String lobbyTopic = "nlove-lobby";
 
@@ -56,12 +57,16 @@ public class Main {
 		Boolean startProvider = shareFolder.exists() && shareFolder.isDirectory() && shareFolder.list().length > 0;
 		ProviderCommandHandler pch = null;
 
-		ReverseProxyCommandHandler rch = new ReverseProxyCommandHandler();
+		ReverseProxyClientCommandHandler rch = new ReverseProxyClientCommandHandler();
 		rch.start();
 
 		if (startProvider) {
 			pch = new ProviderCommandHandler();
 			pch.start();
+
+			ReverseProxyProviderCommandHandler rpch = new ReverseProxyProviderCommandHandler();
+			rpch.start();
+
 		} else {
 			LOG.info("PROVIDER: Not starting, \"shared\" directory missing or empty.");
 		}
