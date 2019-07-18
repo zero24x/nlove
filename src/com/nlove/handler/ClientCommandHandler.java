@@ -58,9 +58,8 @@ public class ClientCommandHandler {
 
 		this.client.onNewMessage(msg -> {
 			this.handle(msg);
-		});
+		}).start();
 
-		this.client.start();
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
 				client.close();
@@ -72,12 +71,10 @@ public class ClientCommandHandler {
 
 	public void subscribe() throws WalletException {
 		try {
-			System.out.println("Subscribing to topic '" + lobbyTopic + "' using " + CLIENT_IDENTIFIER
-					+ (CLIENT_IDENTIFIER == null || CLIENT_IDENTIFIER.isEmpty() ? "" : ".")
+			System.out.println("Subscribing to topic '" + lobbyTopic + "' using " + CLIENT_IDENTIFIER + (CLIENT_IDENTIFIER == null || CLIENT_IDENTIFIER.isEmpty() ? "" : ".")
 					+ Hex.toHexString(this.wallet.getPublicKey()));
 
-			String txID = this.wallet.tx().subscribe(lobbyTopic, 0, subcribeDurationBlocks, CLIENT_IDENTIFIER,
-					(String) null);
+			String txID = this.wallet.tx().subscribe(lobbyTopic, 0, subcribeDurationBlocks, CLIENT_IDENTIFIER, (String) null);
 			LOG.info("CLIENT: Subscribe transaction successful: " + txID);
 
 		} catch (NknHttpApiException $e) {
@@ -117,12 +114,10 @@ public class ClientCommandHandler {
 		if (c instanceof NloveChatMessage) {
 			LOG.info(String.format("(Chat) <%s>: %s", receivedMessage.from, ((NloveChatMessage) c).getText()));
 		} else if (c instanceof NloveDownloadRequestReplyMessage) {
-			NloveDownloadRequestReplyMessage r = (NloveDownloadRequestReplyMessage) this.nloveMessageConverter
-					.parseMsg(receivedMessage);
+			NloveDownloadRequestReplyMessage r = (NloveDownloadRequestReplyMessage) this.nloveMessageConverter.parseMsg(receivedMessage);
 			this.fileDownloadManager.handleDownloadRequestReplyMessage(receivedMessage.msgId.toString(), r);
 		} else if (c instanceof NloveDownloadDataMessage) {
-			this.fileDownloadManager.handleDownloadRequestDataMessage(receivedMessage.msgId.toString(),
-					((NloveDownloadDataMessage) c));
+			this.fileDownloadManager.handleDownloadRequestDataMessage(receivedMessage.msgId.toString(), ((NloveDownloadDataMessage) c));
 		}
 
 	}
@@ -131,20 +126,17 @@ public class ClientCommandHandler {
 		NloveSearchRequestMessage m = new NloveSearchRequestMessage();
 		m.setTerm(term);
 
-		final List<CompletableFuture<NKNClient.ReceivedMessage>> promises = this.client.publishTextMessageAsync(
-				ClientCommandHandler.providerTopic, 0, this.nloveMessageConverter.toMsgString(m));
+		final List<CompletableFuture<NKNClient.ReceivedMessage>> promises = this.client.publishTextMessageAsync(ClientCommandHandler.providerTopic, 0,
+				this.nloveMessageConverter.toMsgString(m));
 
 		for (CompletableFuture<ReceivedMessage> promise : promises) {
 			promise.whenComplete((response, error) -> {
 				if (error == null) {
-					NloveSearchRequestReplyMessage resM = (NloveSearchRequestReplyMessage) this.nloveMessageConverter
-							.parseMsg(response);
+					NloveSearchRequestReplyMessage resM = (NloveSearchRequestReplyMessage) this.nloveMessageConverter.parseMsg(response);
 
-					LOG.info(String.format("\nSearch result from %s:\n========= \n%s\n ========= ", response.from,
-							resM.getResult()));
+					LOG.info(String.format("\nSearch result from %s:\n========= \n%s\n ========= ", response.from, resM.getResult()));
 				} else {
-					LOG.info(String.format("Search response error %s from %s: %s", error.toString(), response.from,
-							response.textData));
+					LOG.info(String.format("Search response error %s from %s: %s", error.toString(), response.from, response.textData));
 				}
 			});
 		}
@@ -168,8 +160,7 @@ public class ClientCommandHandler {
 		NloveChatMessage c = new NloveChatMessage();
 		c.setText(text);
 
-		this.client.publishTextMessageAsync(ClientCommandHandler.lobbyTopic, 0,
-				this.nloveMessageConverter.toMsgString(c));
+		this.client.publishTextMessageAsync(ClientCommandHandler.lobbyTopic, 0, this.nloveMessageConverter.toMsgString(c));
 	}
 
 }

@@ -4,11 +4,12 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,8 +57,8 @@ public class ReverseProxyClientCommandHandler {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		});
-		this.clientClient.start();
+		}).start();
+
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
 				clientClient.close();
@@ -73,37 +74,46 @@ public class ReverseProxyClientCommandHandler {
 		while (true) {
 
 			final Socket reverseProxyClientSocket = reverseProxySocket.accept();
-			String clientConnectionKey = String.format("%s:%s", destinationFullIdentifier,
-					reverseProxyClientSocket.getPort());
+			String clientConnectionKey = String.format("%s:%s", destinationFullIdentifier, reverseProxyClientSocket.getPort());
 			this.clientConnections.put(clientConnectionKey, reverseProxyClientSocket);
 
 			new Thread() {
 				public void run() {
 
-					Thread.currentThread().setName(String.format("connectToServiceProvider %s:%s",
-							reverseProxyClientSocket.getInetAddress().toString(), reverseProxyClientSocket.getPort()));
+					Thread.currentThread()
+							.setName(String.format("connectToServiceProvider %s:%s", reverseProxyClientSocket.getInetAddress().toString(), reverseProxyClientSocket.getPort()));
 					try {
-						InputStream clientIn = new BufferedInputStream(reverseProxyClientSocket.getInputStream());
+						BufferedInputStream clientIn = new BufferedInputStream(reverseProxyClientSocket.getInputStream());
+
 						NloveMessageInterface connectMsg = new NloveReverseProxyConnectMessage() {
 							{
 								setClientPort(reverseProxyClientSocket.getPort());
 							}
 						};
-						clientClient.sendTextMessageAsync(destinationFullIdentifier,
-								nloveMessageConverter.toMsgString(connectMsg));
+						clientClient.sendTextMessageAsync(destinationFullIdentifier, nloveMessageConverter.toMsgString(connectMsg));
 
 						int bytesRead = 0;
-						byte[] headerBytes = nloveMessageConverter.makeHeaderBytes(reverseProxyClientSocket.getPort(),
-								false);
+						byte[] headerBytes = nloveMessageConverter.makeHeaderBytes(reverseProxyClientSocket.getPort(), false);
 						byte[] buffer = new byte[8192];
 
 						try {
 							while ((bytesRead = clientIn.read(buffer)) != -1) {
 								ByteArrayOutputStream bos = new ByteArrayOutputStream();
 								bos.write(headerBytes);
-								bos.write(buffer);
-								clientClient.sendBinaryMessageAsync(destinationFullIdentifier, bos.toByteArray());
+								bos.write(buffer, 0, bytesRead);
+								byte[] bytesToSend = bos.toByteArray();
 
+								Boolean ack = false;
+								do {
+									try {
+										CompletableFuture<ReceivedMessage> resp = clientClient.sendBinaryMessageAsync(destinationFullIdentifier, bytesToSend);
+										ReceivedMessage res = resp.get();
+										ack = true;
+									} catch (CompletionException e) {
+										LOG.warn("No ACK from {} because {}", clientConnectionKey, e.toString());
+									}
+
+								} while (!ack);
 							}
 						} catch (SocketException e) {
 
@@ -114,8 +124,7 @@ public class ReverseProxyClientCommandHandler {
 						try {
 							clientIn.close();
 							clientConnections.remove(clientConnectionKey, reverseProxyClientSocket);
-							clientClient.sendBinaryMessageAsync(destinationFullIdentifier,
-									nloveMessageConverter.makeHeaderBytes(reverseProxyClientSocket.getPort(), true));
+							clientClient.sendBinaryMessageAsync(destinationFullIdentifier, nloveMessageConverter.makeHeaderBytes(reverseProxyClientSocket.getPort(), true));
 
 						} catch (IOException e) {
 						}
@@ -131,10 +140,12 @@ public class ReverseProxyClientCommandHandler {
 
 	private void handleClientClientMessage(ReceivedMessage receivedMessage) throws IOException {
 
-		if (receivedMessage.isBinary) {
+		if (receivedMessage.isBinary && receivedMessage.binaryData.size() > 0) {
+
+			this.clientClient.sendBinaryMessageAsync(receivedMessage.from, receivedMessage.msgId, new byte[] {});
+
 			DecodedNloveMessage decodedMsg = this.nloveMessageConverter.decodeNloveMessage(receivedMessage.binaryData);
-			String clientConnectionKey = String.format("%s:%s", receivedMessage.from,
-					decodedMsg.getHeader().getClientPort());
+			String clientConnectionKey = String.format("%s:%s", receivedMessage.from, decodedMsg.getHeader().getClientPort());
 
 			Socket reverseProxyClientSocket = clientConnections.get(clientConnectionKey);
 			if (reverseProxyClientSocket != null && !reverseProxyClientSocket.isClosed()) {
@@ -142,6 +153,7 @@ public class ReverseProxyClientCommandHandler {
 				if (decodedMsg.getHeader().getSocketClosed()) {
 					try {
 						reverseProxyClientSocket.close();
+						clientConnections.remove(clientConnectionKey);
 					} catch (IOException e) {
 
 					}

@@ -83,129 +83,103 @@ public class NKNClient {
 		return sendTextMessageAsync(destinationFullIdentifier, null, message);
 	}
 
-	public CompletableFuture<ReceivedMessage> sendTextMessageAsync(String destinationFullIdentifier, ByteString replyTo,
-			String message) {
+	public CompletableFuture<ReceivedMessage> sendTextMessageAsync(String destinationFullIdentifier, ByteString replyTo, String message) {
 		final MessagesP.TextData td = MessagesP.TextData.newBuilder().setText(message).build();
 
 		LOG.debug("Sending text message: {}", message);
-		return clientMessages.sendMessageAsync(Collections.singletonList(destinationFullIdentifier), replyTo,
-				MessagesP.PayloadType.TEXT, td.toByteString()).get(0);
+		return clientMessages.sendMessageAsync(Collections.singletonList(destinationFullIdentifier), replyTo, MessagesP.PayloadType.TEXT, td.toByteString()).get(0);
 	}
 
 	public CompletableFuture<ReceivedMessage> sendBinaryMessageAsync(String destinationFullIdentifier, byte[] message) {
 		return sendBinaryMessageAsync(destinationFullIdentifier, null, message);
 	}
 
-	public CompletableFuture<ReceivedMessage> sendBinaryMessageAsync(String destinationFullIdentifier,
-			ByteString message) {
+	public CompletableFuture<ReceivedMessage> sendBinaryMessageAsync(String destinationFullIdentifier, ByteString message) {
 		return sendBinaryMessageAsync(destinationFullIdentifier, null, message);
 	}
 
-	public CompletableFuture<ReceivedMessage> sendBinaryMessageAsync(String destinationFullIdentifier,
-			ByteString replyTo, byte[] message) {
+	public CompletableFuture<ReceivedMessage> sendBinaryMessageAsync(String destinationFullIdentifier, ByteString replyTo, byte[] message) {
 		return sendBinaryMessageAsync(destinationFullIdentifier, replyTo, ByteString.copyFrom(message));
 	}
 
-	public CompletableFuture<ReceivedMessage> sendBinaryMessageAsync(String destinationFullIdentifier,
-			ByteString replyTo, ByteString message) {
+	public CompletableFuture<ReceivedMessage> sendBinaryMessageAsync(String destinationFullIdentifier, ByteString replyTo, ByteString message) {
 		LOG.debug("Sending binary message");
-		return clientMessages.sendMessageAsync(Collections.singletonList(destinationFullIdentifier), replyTo,
-				MessagesP.PayloadType.BINARY, message).get(0);
+		return clientMessages.sendMessageAsync(Collections.singletonList(destinationFullIdentifier), replyTo, MessagesP.PayloadType.BINARY, message).get(0);
 	}
 
-	public CompletableFuture<ReceivedMessage> sendMessageAsync(String destinationFullIdentifier, ByteString replyTo,
-			Object message) {
+	public CompletableFuture<ReceivedMessage> sendMessageAsync(String destinationFullIdentifier, ByteString replyTo, Object message) {
 		LOG.debug("Sending multicast message");
-		return clientMessages.sendMessageAsync(Collections.singletonList(destinationFullIdentifier), replyTo, message)
-				.get(0);
+		return clientMessages.sendMessageAsync(Collections.singletonList(destinationFullIdentifier), replyTo, message).get(0);
 	}
 
-	public List<CompletableFuture<ReceivedMessage>> sendTextMessageMulticastAsync(String[] destinationFullIdentifier,
-			String message) {
+	public List<CompletableFuture<ReceivedMessage>> sendTextMessageMulticastAsync(String[] destinationFullIdentifier, String message) {
 		return sendTextMessageMulticastAsync(destinationFullIdentifier, null, message);
 	}
 
-	public List<CompletableFuture<ReceivedMessage>> sendTextMessageMulticastAsync(String[] destinationFullIdentifier,
-			ByteString replyTo, String message) {
+	public List<CompletableFuture<ReceivedMessage>> sendTextMessageMulticastAsync(String[] destinationFullIdentifier, ByteString replyTo, String message) {
 		return sendTextMessageMulticastAsync(Arrays.asList(destinationFullIdentifier), replyTo, message);
 	}
 
-	public List<CompletableFuture<ReceivedMessage>> sendBinaryMessageMulticastAsync(String[] destinationFullIdentifier,
-			byte[] message) {
+	public List<CompletableFuture<ReceivedMessage>> sendBinaryMessageMulticastAsync(String[] destinationFullIdentifier, byte[] message) {
 		return sendBinaryMessageMulticastAsync(destinationFullIdentifier, null, ByteString.copyFrom(message));
 	}
 
-	public List<CompletableFuture<ReceivedMessage>> sendBinaryMessageMulticastAsync(String[] destinationFullIdentifier,
-			ByteString message) {
+	public List<CompletableFuture<ReceivedMessage>> sendBinaryMessageMulticastAsync(String[] destinationFullIdentifier, ByteString message) {
 		return sendBinaryMessageMulticastAsync(destinationFullIdentifier, null, message);
 	}
 
-	public List<CompletableFuture<ReceivedMessage>> sendBinaryMessageMulticastAsync(String[] destinationFullIdentifier,
-			ByteString replyTo, byte[] message) {
+	public List<CompletableFuture<ReceivedMessage>> sendBinaryMessageMulticastAsync(String[] destinationFullIdentifier, ByteString replyTo, byte[] message) {
 		return sendBinaryMessageMulticastAsync(destinationFullIdentifier, replyTo, ByteString.copyFrom(message));
 	}
 
-	public List<CompletableFuture<ReceivedMessage>> sendBinaryMessageMulticastAsync(String[] destinationFullIdentifier,
-			ByteString replyTo, ByteString message) {
+	public List<CompletableFuture<ReceivedMessage>> sendBinaryMessageMulticastAsync(String[] destinationFullIdentifier, ByteString replyTo, ByteString message) {
 		return sendBinaryMessageMulticastAsync(Arrays.asList(destinationFullIdentifier), replyTo, message);
 	}
 
-	public List<CompletableFuture<ReceivedMessage>> sendMessageMulticastAsync(String[] destinationFullIdentifier,
-			ByteString replyTo, Object message) {
+	public List<CompletableFuture<ReceivedMessage>> sendMessageMulticastAsync(String[] destinationFullIdentifier, ByteString replyTo, Object message) {
 		return sendMessageMulticastAsync(Arrays.asList(destinationFullIdentifier), replyTo, message);
 	}
 
-	public List<CompletableFuture<ReceivedMessage>> sendTextMessageMulticastAsync(
-			List<String> destinationFullIdentifier, String message) {
+	public List<CompletableFuture<ReceivedMessage>> sendTextMessageMulticastAsync(List<String> destinationFullIdentifier, String message) {
 		return sendTextMessageMulticastAsync(destinationFullIdentifier, null, message);
 	}
 
-	public List<CompletableFuture<ReceivedMessage>> sendTextMessageMulticastAsync(
-			List<String> destinationFullIdentifier, ByteString replyTo, String message) {
+	public List<CompletableFuture<ReceivedMessage>> sendTextMessageMulticastAsync(List<String> destinationFullIdentifier, ByteString replyTo, String message) {
 		final MessagesP.TextData td = MessagesP.TextData.newBuilder().setText(message).build();
 
 		LOG.debug("Sending multicast text message: {}", message);
-		return clientMessages.sendMessageAsync(destinationFullIdentifier, replyTo, MessagesP.PayloadType.TEXT,
-				td.toByteString());
+		return clientMessages.sendMessageAsync(destinationFullIdentifier, replyTo, MessagesP.PayloadType.TEXT, td.toByteString());
 	}
 
-	public List<CompletableFuture<ReceivedMessage>> sendBinaryMessageMulticastAsync(
-			List<String> destinationFullIdentifier, ByteString replyTo, byte[] message) {
+	public List<CompletableFuture<ReceivedMessage>> sendBinaryMessageMulticastAsync(List<String> destinationFullIdentifier, ByteString replyTo, byte[] message) {
 		return sendBinaryMessageMulticastAsync(destinationFullIdentifier, replyTo, ByteString.copyFrom(message));
 	}
 
-	public List<CompletableFuture<ReceivedMessage>> sendBinaryMessageMulticastAsync(
-			List<String> destinationFullIdentifier, ByteString replyTo, ByteString message) {
+	public List<CompletableFuture<ReceivedMessage>> sendBinaryMessageMulticastAsync(List<String> destinationFullIdentifier, ByteString replyTo, ByteString message) {
 		LOG.debug("Sending multicast binary message");
-		return clientMessages.sendMessageAsync(destinationFullIdentifier, replyTo, MessagesP.PayloadType.BINARY,
-				message);
+		return clientMessages.sendMessageAsync(destinationFullIdentifier, replyTo, MessagesP.PayloadType.BINARY, message);
 	}
 
-	public List<CompletableFuture<ReceivedMessage>> sendMessageMulticastAsync(List<String> destinationFullIdentifier,
-			ByteString replyTo, Object message) {
+	public List<CompletableFuture<ReceivedMessage>> sendMessageMulticastAsync(List<String> destinationFullIdentifier, ByteString replyTo, Object message) {
 		LOG.debug("Sending multicast message");
 		return clientMessages.sendMessageAsync(destinationFullIdentifier, replyTo, message);
 	}
 
-	public List<CompletableFuture<ReceivedMessage>> publishTextMessageAsync(String topic, int bucket, String message)
-			throws WalletException {
+	public List<CompletableFuture<ReceivedMessage>> publishTextMessageAsync(String topic, int bucket, String message) throws WalletException {
 		final MessagesP.TextData td = MessagesP.TextData.newBuilder().setText(message).build();
 
 		return publishMessageAsync(topic, bucket, td.toByteString(), MessagesP.PayloadType.TEXT);
 	}
 
-	public List<CompletableFuture<ReceivedMessage>> publishBinaryMessageAsync(String topic, int bucket, byte[] message)
-			throws WalletException {
+	public List<CompletableFuture<ReceivedMessage>> publishBinaryMessageAsync(String topic, int bucket, byte[] message) throws WalletException {
 		return publishBinaryMessageAsync(topic, bucket, ByteString.copyFrom(message));
 	}
 
-	public List<CompletableFuture<ReceivedMessage>> publishBinaryMessageAsync(String topic, int bucket,
-			ByteString message) throws WalletException {
+	public List<CompletableFuture<ReceivedMessage>> publishBinaryMessageAsync(String topic, int bucket, ByteString message) throws WalletException {
 		return publishMessageAsync(topic, bucket, message, MessagesP.PayloadType.BINARY);
 	}
 
-	private List<CompletableFuture<ReceivedMessage>> publishMessageAsync(String topic, int bucket, ByteString data,
-			MessagesP.PayloadType type) throws WalletException {
+	private List<CompletableFuture<ReceivedMessage>> publishMessageAsync(String topic, int bucket, ByteString data, MessagesP.PayloadType type) throws WalletException {
 		final NKNExplorer.Subscriber[] subscribers = NKNExplorer.getSubscribers(topic, bucket);
 		if (subscribers.length == 0)
 			return new ArrayList<>();
@@ -242,8 +216,7 @@ public class NKNClient {
 		public final boolean isText;
 		public final boolean isAck;
 
-		public ReceivedMessage(String from, ByteString msgId, boolean wasEncrypted, MessagesP.PayloadType type,
-				Object data) {
+		public ReceivedMessage(String from, ByteString msgId, boolean wasEncrypted, MessagesP.PayloadType type, Object data) {
 			this.from = from.lastIndexOf('.') == 0 ? from.substring(1) : from;
 			this.msgId = msgId;
 			this.wasEncrypted = wasEncrypted;

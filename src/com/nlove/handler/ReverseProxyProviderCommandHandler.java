@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
@@ -83,13 +84,11 @@ public class ReverseProxyProviderCommandHandler {
 					Executors.newSingleThreadExecutor().execute(new Runnable() {
 						@Override
 						public void run() {
-							Thread.currentThread()
-									.setName(String.format("handleProviderClientMessage %s", receivedMessage.from));
+							Thread.currentThread().setName(String.format("handleProviderClientMessage %s", receivedMessage.from));
 
 							try {
-								int x = serviceSocket.getReceiveBufferSize();
-								InputStream serviceSocketInputStream = new BufferedInputStream(
-										serviceSocket.getInputStream());
+
+								InputStream serviceSocketInputStream = new BufferedInputStream(serviceSocket.getInputStream());
 
 								int bytesRead = 0;
 								byte[] buffer = new byte[8192];
@@ -98,14 +97,24 @@ public class ReverseProxyProviderCommandHandler {
 								try {
 									while ((bytesRead = serviceSocketInputStream.read(buffer)) != -1) {
 
-										ByteArrayOutputStream bos = new ByteArrayOutputStream(
-												headerBytes.length + buffer.length);
+										ByteArrayOutputStream bos = new ByteArrayOutputStream(headerBytes.length + buffer.length);
 
 										bos.write(headerBytes);
-										bos.write(buffer);
+										bos.write(buffer, 0, bytesRead);
 										bos.flush();
+										byte[] bytesToSend = bos.toByteArray();
 
-										providerClient.sendBinaryMessageAsync(receivedMessage.from, bos.toByteArray());
+										Boolean ack = false;
+										do {
+											try {
+												CompletableFuture<ReceivedMessage> resp = providerClient.sendBinaryMessageAsync(receivedMessage.from, bytesToSend);
+												ReceivedMessage res = resp.get();
+												ack = true;
+											} catch (Exception e) {
+												LOG.warn("No ACK from {} because {}", clientConnectionKey, e.toString());
+											}
+
+										} while (!ack);
 
 									}
 								} catch (IOException e) {
@@ -114,8 +123,7 @@ public class ReverseProxyProviderCommandHandler {
 								try {
 									serviceSocketInputStream.close();
 									clientConnections.remove(clientConnectionKey);
-									providerClient.sendBinaryMessageAsync(receivedMessage.from,
-											nloveMessageConverter.makeHeaderBytes(clientPort, true));
+									providerClient.sendBinaryMessageAsync(receivedMessage.from, nloveMessageConverter.makeHeaderBytes(clientPort, true));
 								} catch (IOException e) {
 								}
 
@@ -131,12 +139,12 @@ public class ReverseProxyProviderCommandHandler {
 			}
 		}
 
-		if (receivedMessage.isBinary)
+		if (receivedMessage.isBinary && receivedMessage.binaryData.size() > 0) {
 
-		{
+			this.providerClient.sendBinaryMessageAsync(receivedMessage.from, receivedMessage.msgId, new byte[] {});
+
 			DecodedNloveMessage decodedMsg = this.nloveMessageConverter.decodeNloveMessage(receivedMessage.binaryData);
-			String clientConnectionKey = String.format("%s:%s", receivedMessage.from,
-					decodedMsg.getHeader().getClientPort());
+			String clientConnectionKey = String.format("%s:%s", receivedMessage.from, decodedMsg.getHeader().getClientPort());
 
 			Socket serviceSocket = clientConnections.get(clientConnectionKey);
 			if (serviceSocket != null && !serviceSocket.isClosed()) {

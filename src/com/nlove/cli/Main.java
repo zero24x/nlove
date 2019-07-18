@@ -23,17 +23,17 @@ public class Main {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
-	public static void main(String[] args)
-			throws NKNClientException, WalletException, InterruptedException, IOException {
+	public static void main(String[] args) throws NKNClientException, WalletException, InterruptedException, IOException {
 
 		final String helpText = "Welcome to nlove! Important commands: \n" + "help --> View this command help"
 				+ "search <searchterm> --> Search for providers offering files with  \"kitties\" in the name\n"
-				+ "download <filepath> --> Download a certain file provided by any provider\n"
-				+ "chat <message> --> Write a public message in the lobby chat\n"
+				+ "download <filepath> --> Download a certain file provided by any provider\n" + "chat <message> --> Write a public message in the lobby chat\n"
 				+ "Note: To start providing files, simply put them in the \"share\" subfolder.";
 		System.out.println(helpText);
 
-		setupLogging(TPLogger.INFO);
+		boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
+
+		setupLogging(isDebug ? TPLogger.DEBUG : TPLogger.INFO);
 
 		final String lobbyTopic = "nlove-lobby";
 
@@ -48,6 +48,7 @@ public class Main {
 
 		ClientCommandHandler cch = new ClientCommandHandler();
 		cch.start();
+		Thread.sleep(500);
 
 		InputStreamReader in = new InputStreamReader(System.in);
 		BufferedReader br = new BufferedReader(in);
@@ -55,13 +56,12 @@ public class Main {
 		File shareFolder = new File(System.getProperty("user.dir"));
 
 		Boolean startProvider = shareFolder.exists() && shareFolder.isDirectory() && shareFolder.list().length > 0;
-		ProviderCommandHandler pch = null;
 
 		ReverseProxyClientCommandHandler rch = new ReverseProxyClientCommandHandler();
 		rch.start();
 
 		if (startProvider) {
-			pch = new ProviderCommandHandler();
+			ProviderCommandHandler pch = new ProviderCommandHandler();
 			pch.start();
 
 			ReverseProxyProviderCommandHandler rpch = new ReverseProxyProviderCommandHandler();

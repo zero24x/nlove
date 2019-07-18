@@ -58,9 +58,8 @@ public class ProviderCommandHandler {
 
 		this.client.onNewMessageWithReply(msg -> {
 			return this.handle(msg);
-		});
+		}).start();
 
-		this.client.start();
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
 				client.close();
@@ -72,12 +71,10 @@ public class ProviderCommandHandler {
 
 	public void subscribe() throws WalletException {
 		try {
-			System.out.println("Subscribing to topic '" + providerTopic + "' using " + CLIENT_IDENTIFIER
-					+ (CLIENT_IDENTIFIER == null || CLIENT_IDENTIFIER.isEmpty() ? "" : ".")
+			System.out.println("Subscribing to topic '" + providerTopic + "' using " + CLIENT_IDENTIFIER + (CLIENT_IDENTIFIER == null || CLIENT_IDENTIFIER.isEmpty() ? "" : ".")
 					+ Hex.toHexString(this.wallet.getPublicKey()));
 
-			String txID = this.wallet.tx().subscribe(providerTopic, 0, subcribeDurationBlocks, CLIENT_IDENTIFIER,
-					(String) null);
+			String txID = this.wallet.tx().subscribe(providerTopic, 0, subcribeDurationBlocks, CLIENT_IDENTIFIER, (String) null);
 			LOG.info("PROVIDER: Subscribe transaction successful: " + txID);
 
 		} catch (NknHttpApiException $e) {
@@ -141,8 +138,7 @@ public class ProviderCommandHandler {
 	}
 
 	private Boolean isBlacklistedTerm(String term) {
-		File blacklistFile = Paths.get(System.getProperty("user.dir"), File.separator.toString(), "config",
-				File.separator.toString(), "blacklist.txt").toFile();
+		File blacklistFile = Paths.get(System.getProperty("user.dir"), File.separator.toString(), "config", File.separator.toString(), "blacklist.txt").toFile();
 		Scanner sc = null;
 
 		try {
@@ -192,53 +188,51 @@ public class ProviderCommandHandler {
 
 		final long detectedFlen = new Long(fLen);
 
-		this.client.sendTextMessageAsync(receivedMessage.from, receivedMessage.msgId,
-				this.nloveMessageConverter.toMsgString(replyM)).whenComplete((response, error) -> {
-					if (error == null) {
-						FileChannel inChannel = aFile.getChannel();
-						ByteBuffer buffer = ByteBuffer.allocate(1024);
-						long offset = 0;
+		this.client.sendTextMessageAsync(receivedMessage.from, receivedMessage.msgId, this.nloveMessageConverter.toMsgString(replyM)).whenComplete((response, error) -> {
+			if (error == null) {
+				FileChannel inChannel = aFile.getChannel();
+				ByteBuffer buffer = ByteBuffer.allocate(1024);
+				long offset = 0;
 
-						long totalBytesRead = 0;
+				long totalBytesRead = 0;
 
-						while (totalBytesRead < detectedFlen) {
-							try {
-								totalBytesRead += inChannel.read(buffer);
-							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-
-							buffer.flip();
-							byte[] data = null;
-							buffer.get(data);
-
-							NloveDownloadDataMessage d = new NloveDownloadDataMessage() {
-								{
-									setFileID(m.getFileId());
-									setOffset(offset);
-									setData(data);
-								}
-							};
-
-							this.client.sendTextMessageAsync(receivedMessage.from,
-									this.nloveMessageConverter.toMsgString(d));
-
-							buffer.clear();
-						}
-
-						try {
-							inChannel.close();
-							aFile.close();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-
-					} else {
-						error.printStackTrace();
+				while (totalBytesRead < detectedFlen) {
+					try {
+						totalBytesRead += inChannel.read(buffer);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
-				});
+
+					buffer.flip();
+					byte[] data = null;
+					buffer.get(data);
+
+					NloveDownloadDataMessage d = new NloveDownloadDataMessage() {
+						{
+							setFileID(m.getFileId());
+							setOffset(offset);
+							setData(data);
+						}
+					};
+
+					this.client.sendTextMessageAsync(receivedMessage.from, this.nloveMessageConverter.toMsgString(d));
+
+					buffer.clear();
+				}
+
+				try {
+					inChannel.close();
+					aFile.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+			} else {
+				error.printStackTrace();
+			}
+		});
 
 	}
 }

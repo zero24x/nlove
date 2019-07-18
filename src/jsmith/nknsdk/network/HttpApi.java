@@ -31,20 +31,27 @@ public class HttpApi {
 		requestBody.put("method", method);
 		requestBody.put("params", parameters);
 
-		Response<String> response = webb.post("http://" + to.getHostString() + ":" + to.getPort()).ensureSuccess()
-				.bodyJson(requestBody.toString()).connectTimeout(ConnectionProvider.rpcCallTimeoutMS())
-				.readTimeout(ConnectionProvider.rpcCallTimeoutMS()).execute(ResponseTranslator.STRING_TRANSLATOR);
+		Response<String> response = webb.post("http://" + to.getHostString() + ":" + to.getPort()).ensureSuccess().bodyJson(requestBody.toString())
+				.connectTimeout(ConnectionProvider.rpcCallTimeoutMS()).readTimeout(ConnectionProvider.rpcCallTimeoutMS()).execute(ResponseTranslator.STRING_TRANSLATOR);
 
 		return new JSONObject(response.getBody());
 	}
 
+	/**
+	 * @TODO implement
+	 * 
+	 * @param server
+	 * @param topic
+	 * @return
+	 */
 	public Integer getFirstAvailableTopicBucket(InetSocketAddress server, String topic) {
 		final JSONObject params = new JSONObject();
 		params.put("topic", topic);
 
 		final JSONObject response = rpcCallJson(server, "getfirstavailabletopicbucket", params);
+		final JSONObject result = response.getJSONObject("result");
 
-		return 7;
+		return 0;
 	}
 
 	public static NKNExplorer.Subscriber[] getSubscribers(InetSocketAddress server, String topic, int bucket) {
@@ -88,21 +95,18 @@ public class HttpApi {
 		return nonce;
 	}
 
-	public static void sendRawTransaction(InetSocketAddress server, byte[] tx)
-			throws JSONException, NknHttpApiException {
+	public static void sendRawTransaction(InetSocketAddress server, byte[] tx) throws JSONException, NknHttpApiException {
 		sendRawTransaction(server, Hex.toHexString(tx));
 	}
 
-	public static String sendRawTransaction(InetSocketAddress server, String tx)
-			throws JSONException, NknHttpApiException {
+	public static String sendRawTransaction(InetSocketAddress server, String tx) throws JSONException, NknHttpApiException {
 		final JSONObject params = new JSONObject();
 		params.put("tx", tx);
 
 		final JSONObject response = rpcCallJson(server, "sendrawtransaction", params);
 
 		if (response.has("error")) {
-			throw new NknHttpApiException(response.getJSONObject("error").getInt("code"),
-					response.getJSONObject("error").getString("data"));
+			throw new NknHttpApiException(response.getJSONObject("error").getInt("code"), response.getJSONObject("error").getString("data"));
 		}
 
 		return response.getString("result");
