@@ -70,10 +70,11 @@ public class NloveMessageConverter {
 		return null;
 	}
 
-	public byte[] makeHeaderBytes(int clientPort, Boolean socketClosed) {
+	public byte[] makeHeaderBytes(int clientPort, Boolean socketClosed, long sequenceNum) {
 		NloveReverseProxyMessageHeader header = new NloveReverseProxyMessageHeader();
 		header.setClientPort(clientPort);
 		header.setSocketClosed(socketClosed);
+		header.setSequenceNum(sequenceNum);
 
 		try {
 			byte[] res = (this.mapper.writeValueAsString(header) + NloveMessageConverter.MAGIC_IDENTIFIER).getBytes();
@@ -99,8 +100,7 @@ public class NloveMessageConverter {
 		String headerString = new String(header);
 		JSONObject headerJson = new JSONObject(headerString);
 
-		NloveReverseProxyMessageHeader decodedHeader = mapper.convertValue(headerJson,
-				NloveReverseProxyMessageHeader.class);
+		NloveReverseProxyMessageHeader decodedHeader = mapper.convertValue(headerJson, NloveReverseProxyMessageHeader.class);
 
 		res.setHeader(decodedHeader);
 		res.setPayload(Arrays.copyOfRange(fullData, headerEndPos + identifierBytes.length, fullData.length));

@@ -50,6 +50,7 @@ public class ReverseProxyClientCommandHandler {
 		this.clientClient = new NKNClient(this.clientIdentity);
 		LOG.info("Reverse proxy handler client ID: " + this.clientIdentity.getFullIdentifier());
 
+		this.clientClient.setNoAutomaticACKs(true);
 		this.clientClient.onNewMessage(msg -> {
 			try {
 				this.handleClientClientMessage(msg);

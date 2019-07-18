@@ -7,9 +7,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,8 +36,10 @@ public class ReverseProxyProviderCommandHandler {
 	private Wallet wallet;
 	private NloveMessageConverter nloveMessageConverter = new NloveMessageConverter("REVERSE_PROXY");
 	private static final Logger LOG = LoggerFactory.getLogger(ReverseProxyProviderCommandHandler.class);
-	HashMap<String, Socket> clientConnections = new HashMap<String, Socket>();
+	ConcurrentHashMap<String, Socket> clientConnections = new ConcurrentHashMap<String, Socket>();
 	Socket reverseProxyClientSocket;
+	private AtomicInteger numConnections = new AtomicInteger();
+	private static int MAX_CONNECTIONS = 100;
 
 	public void start() throws NKNClientException, WalletException, IOException {
 
@@ -52,6 +55,7 @@ public class ReverseProxyProviderCommandHandler {
 		this.providerClient = new NKNClient(this.providerIdentity);
 		LOG.info("Reverse proxy provider handler provider ID:" + this.providerIdentity.getFullIdentifier());
 
+		this.providerClient.setNoAutomaticACKs(true);
 		this.providerClient.onNewMessage(msg -> {
 			try {
 				this.handleProviderClientMessage(msg);
@@ -80,8 +84,11 @@ public class ReverseProxyProviderCommandHandler {
 				if (!this.clientConnections.containsKey(clientConnectionKey)) {
 					Socket serviceSocket = new Socket("localhost", 80);
 					this.clientConnections.put(clientConnectionKey, serviceSocket);
+					int numConnectionsNow = numConnections.incrementAndGet();
+					LOG.info("Num connections = %i", numConnectionsNow);
 
 					Executors.newSingleThreadExecutor().execute(new Runnable() {
+
 						@Override
 						public void run() {
 							Thread.currentThread().setName(String.format("handleProviderClientMessage %s", receivedMessage.from));
@@ -123,6 +130,9 @@ public class ReverseProxyProviderCommandHandler {
 								try {
 									serviceSocketInputStream.close();
 									clientConnections.remove(clientConnectionKey);
+									int numConnectionsNow = numConnections.decrementAndGet();
+									LOG.info("Num connections = %i", numConnectionsNow);
+
 									providerClient.sendBinaryMessageAsync(receivedMessage.from, nloveMessageConverter.makeHeaderBytes(clientPort, true));
 								} catch (IOException e) {
 								}
