@@ -37,13 +37,14 @@ public class ProviderCommandHandler {
 	static String CLIENT_IDENTIFIER = "nlove-provider";
 	private Wallet wallet;
 	private static Integer previousHeight = 0;
-	private static Integer subcribeDurationBlocks = 1000;
+	private static Integer subcribeDurationBlocks = 4320; // blocks in 1 day
 	private static String providerTopic = "nlove-providers";
 	private NloveMessageConverter nloveMessageConverter = new NloveMessageConverter("PROVIDER");
 
 	private static final Logger LOG = LoggerFactory.getLogger(ProviderCommandHandler.class);
 
 	public void start() throws NKNClientException, WalletException {
+
 		File walletFile = new File("walletForProvider.dat");
 
 		if (!walletFile.exists())

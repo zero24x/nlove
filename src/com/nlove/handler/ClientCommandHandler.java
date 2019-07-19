@@ -33,8 +33,8 @@ public class ClientCommandHandler {
 	static String CLIENT_IDENTIFIER = "nlove-client";
 	private Wallet wallet;
 	private static Integer previousHeight = 0;
-	private static Integer subcribeDurationBlocks = 1000;
-	private static String lobbyTopic = "nlove-lobby";
+	private static Integer subcribeDurationBlocks = 4320; // blocks in 1 day
+	public static String lobbyTopic = "nlove-lobby";
 	private static String providerTopic = "nlove-providers";
 	private NloveMessageConverter nloveMessageConverter = new NloveMessageConverter("CLIENT");
 	private FileDownloadManager fileDownloadManager;
@@ -111,9 +111,7 @@ public class ClientCommandHandler {
 
 		NloveMessageInterface c = this.nloveMessageConverter.parseMsg(receivedMessage);
 
-		if (c instanceof NloveChatMessage) {
-			LOG.info(String.format("(Chat) <%s>: %s", receivedMessage.from, ((NloveChatMessage) c).getText()));
-		} else if (c instanceof NloveDownloadRequestReplyMessage) {
+		if (c instanceof NloveDownloadRequestReplyMessage) {
 			NloveDownloadRequestReplyMessage r = (NloveDownloadRequestReplyMessage) this.nloveMessageConverter.parseMsg(receivedMessage);
 			this.fileDownloadManager.handleDownloadRequestReplyMessage(receivedMessage.msgId.toString(), r);
 		} else if (c instanceof NloveDownloadDataMessage) {

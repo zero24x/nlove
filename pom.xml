@@ -83,7 +83,7 @@
 		<groupId>com.fasterxml.jackson.datatype</groupId>
 		<artifactId>jackson-datatype-json-org</artifactId>
 		<version>2.9.9</version>
-	</dependency>
+	</dependency>	
     <dependency>
         <groupId>org.glassfish.tyrus</groupId>
         <artifactId>tyrus-client</artifactId>
@@ -91,8 +91,19 @@
     </dependency>
     <dependency>
         <groupId>org.glassfish.tyrus</groupId>
-        <artifactId>tyrus-container-jdk-client</artifactId>
-        <version>1.15</version>
+        <artifactId>tyrus-container-grizzly-client</artifactId>
+        <version>1.8.3</version>
+        </dependency>
+    <dependency>
+    	<groupId>commons-lang</groupId>
+    	<artifactId>commons-lang</artifactId>
+    	<version>2.6</version>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+	<dependency>
+	    <groupId>com.google.guava</groupId>
+	    <artifactId>guava</artifactId>
+	    <version>28.0-jre</version>
+	</dependency>	    
   </dependencies>
 </project>

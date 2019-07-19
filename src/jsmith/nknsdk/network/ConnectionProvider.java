@@ -16,7 +16,7 @@ public class ConnectionProvider {
 
 	private static final Object lock = new Object();
 
-	private static InetSocketAddress[] bootstrapNodesOld = { new InetSocketAddress("mainnet-seed-0001.nkn.org", 30003), new InetSocketAddress("mainnet-seed-0002.nkn.org", 30003),
+	private static InetSocketAddress[] bootstrapNodes = { new InetSocketAddress("mainnet-seed-0001.nkn.org", 30003), new InetSocketAddress("mainnet-seed-0002.nkn.org", 30003),
 			new InetSocketAddress("mainnet-seed-0003.nkn.org", 30003), new InetSocketAddress("mainnet-seed-0004.nkn.org", 30003),
 			new InetSocketAddress("mainnet-seed-0005.nkn.org", 30003), new InetSocketAddress("mainnet-seed-0006.nkn.org", 30003),
 			new InetSocketAddress("mainnet-seed-0007.nkn.org", 30003), new InetSocketAddress("mainnet-seed-0008.nkn.org", 30003),
@@ -41,13 +41,9 @@ public class ConnectionProvider {
 
 	};
 
-	private static InetSocketAddress[] bootstrapNodes = { new InetSocketAddress("107.173.23.92", 30003),
-
-	};
-
 	private static int maxRetries = 10;
-	private static int rpcCallTimeoutMS = 60000;
-	private static int messageAckTimeoutMS = 5000;
+	private static int rpcCallTimeoutMS = 10000;
+	private static int messageAckTimeoutMS = 10000;
 
 	public static int maxRetries() {
 		synchronized (lock) {

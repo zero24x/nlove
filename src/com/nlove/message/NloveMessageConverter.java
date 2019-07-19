@@ -6,8 +6,8 @@ import org.json.JSONObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsonorg.JsonOrgModule;
+import com.google.common.primitives.Bytes;
 import com.google.protobuf.ByteString;
-import com.nlove.util.ByteUtil;
 
 import jsmith.nknsdk.client.NKNClient.ReceivedMessage;
 
@@ -16,6 +16,7 @@ public class NloveMessageConverter {
 	public static String MAGIC_IDENTIFIER = "<<NLOV>>";
 	private String name;
 	private ObjectMapper mapper;
+	private byte[] IDENTIFIER_BYTES = NloveMessageConverter.MAGIC_IDENTIFIER.toString().getBytes();
 
 	public NloveMessageConverter(String name) {
 		this.name = name;
@@ -70,11 +71,10 @@ public class NloveMessageConverter {
 		return null;
 	}
 
-	public byte[] makeHeaderBytes(int clientPort, Boolean socketClosed, long sequenceNum) {
+	public byte[] makeHeaderBytes(int clientPort, Boolean socketClosed) {
 		NloveReverseProxyMessageHeader header = new NloveReverseProxyMessageHeader();
 		header.setClientPort(clientPort);
 		header.setSocketClosed(socketClosed);
-		header.setSequenceNum(sequenceNum);
 
 		try {
 			byte[] res = (this.mapper.writeValueAsString(header) + NloveMessageConverter.MAGIC_IDENTIFIER).getBytes();
@@ -91,11 +91,10 @@ public class NloveMessageConverter {
 		DecodedNloveMessage res = new DecodedNloveMessage();
 
 		byte[] fullData = data.toByteArray();
-		byte[] identifierBytes = NloveMessageConverter.MAGIC_IDENTIFIER.toString().getBytes();
 
-		int headerEndPos = ByteUtil.indexOf(fullData, identifierBytes);
+		int headerEndPos = Bytes.indexOf(fullData, IDENTIFIER_BYTES);
 
-		byte[] header = Arrays.copyOfRange(fullData, 0, headerEndPos);
+		byte[] header = Arrays.copyOf(fullData, headerEndPos);
 
 		String headerString = new String(header);
 		JSONObject headerJson = new JSONObject(headerString);
@@ -103,7 +102,8 @@ public class NloveMessageConverter {
 		NloveReverseProxyMessageHeader decodedHeader = mapper.convertValue(headerJson, NloveReverseProxyMessageHeader.class);
 
 		res.setHeader(decodedHeader);
-		res.setPayload(Arrays.copyOfRange(fullData, headerEndPos + identifierBytes.length, fullData.length));
+		res.setPayload(Arrays.copyOfRange(fullData, headerEndPos + IDENTIFIER_BYTES.length, fullData.length));
+
 		return res;
 	}
 

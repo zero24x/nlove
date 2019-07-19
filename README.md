@@ -1,36 +1,44 @@
 # NLove - A new kind of sharing things you love
 
-NLove is a filesharing tool using the NKN protocol.
+NLove is a filesharing tool using the NKN protocol. It is command line based and simple to use.
 
-It is command line based and simple to use.
-
-# Start it:
-
-`java -jar nlove.jar`
-
-# Commands
-
-```
-search <searchterm> --> Searches for providers offering files with <searchterm> in the name
-"download <fileID> --> Download a file with ID <fileID> provided by any provider
-chat <message> --> Write a public message in the lobby chat.
-```
+# Community chat
+Feel free to join our community chat on the NKN Dchat (Channel: #nlove, get Dchat here: https://gitlab.com/losnappas/d-chat)
 
 # Infrastructure:
 
 The nlove system consists of "clients" and "providers". By default you will join as a client and will be in the lobby where all 
-people can chat in public.
+people can chat in public or search through the files offered by providers.
 
-## Becoming a file provider
+## List of providers
+To see a list of all providers who share files on their server, enter the command `list providers`, all names (chosen by the providers) of all providers will 
+be returned.
+
+## Becoming a provider
 
 Providers can provide files by putting them in the subfolder "share", so to become a provider put files in this
 folder and restart the program.
-Clients can issue search commands e.g. "search kitty", the providers will search through all 
+
+Clients can issue search commands e.g. "search kitty" in the lobby chat room, the providers respond with search results matching
 files in the shared directory and return all file IDs of the matches to the client.
 
-To download one of this files, enter "download <fileid" (e.g. "download nlove-privoderx938989alljx/kitty.jpg" and the client
-will start download this file).
+Steps:
+
+1) Put files in the subfolder "share".
+2) Start the sharing server, e.g. FTP on port 22.
+3) Enter the command `provider enable`, you will be asked for a port of your local service (that other users can connect to). E.g. if you want to share an Webserver on Port 80, enter 80 here.
+4) Done! Now tell others about your service to they start sharing or maybe they find you using the search - the command `search kitty` lists all 
+server having files with this term in their "share" directory.
+
+Note: To change the provider settings e.g. port, edit the file `config/config.json`
+
+To stop being a provider, run `provider disable`.
 
 # Limitations:
 To prevent abuse (sharing bad things) some search terms are blacklisted.
 The network is limited to 1000 participants, we do not want to consume too much bandwidth!
+
+# Start it:
+
+`java -Xmx1024m -jar nlove.jar`
+
