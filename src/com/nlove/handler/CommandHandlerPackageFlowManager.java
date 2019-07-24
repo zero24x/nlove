@@ -5,7 +5,6 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.slf4j.Logger;
@@ -23,15 +22,16 @@ public class CommandHandlerPackageFlowManager {
 	private int ackNum = 0;
 	private int seqNum = 0;
 	private String name;
-	private ConcurrentHashMap<String, Socket> clientConnections = new ConcurrentHashMap<String, Socket>();
 	private ConcurrentSkipListMap<Integer, HoldedObject<ReverseProxyReplyPacket>> unackedPackets = new ConcurrentSkipListMap<Integer, HoldedObject<ReverseProxyReplyPacket>>();
 	private static final Logger LOG = LoggerFactory.getLogger(CommandHandlerPackageFlowManager.class);
 
 	private HashMap<Integer, HoldedObject<ReverseProxyDecodedPacket>> holdedIncomingPackets = new HashMap<Integer, HoldedObject<ReverseProxyDecodedPacket>>();
 	private Thread packetResenderThread;
 	private Thread reportHoldedPacketsThread;
+	private Socket localClientSocket;
 
-	public CommandHandlerPackageFlowManager(String name, NKNClient client) {
+	public CommandHandlerPackageFlowManager(Socket localClientSocket, String name, NKNClient client) {
+		this.localClientSocket = localClientSocket;
 		this.name = name;
 		this.client = client;
 	}
@@ -112,14 +112,6 @@ public class CommandHandlerPackageFlowManager {
 
 	}
 
-	public ConcurrentHashMap<String, Socket> getClientConnections() {
-		return clientConnections;
-	}
-
-	public void setClientConnections(ConcurrentHashMap<String, Socket> clientConnections) {
-		this.clientConnections = clientConnections;
-	}
-
 	public void forwardPackets(Integer seqNum, HoldedObject<ReverseProxyDecodedPacket> receivedPacket) {
 		if (receivedPacket.getHoldedObject().getMessage().getHeader().isAck()) {
 			LOG.debug("Received ACK, not processing!");
@@ -151,9 +143,6 @@ public class CommandHandlerPackageFlowManager {
 		}
 
 		if (nextPacket != null) {
-			String clientConnectionKey = nextPacket.getConnectionKey();
-			Socket localClientSocket = this.clientConnections.get(clientConnectionKey);
-
 			try {
 
 				if (nextPacket.getMessage().getHeader().getSocketClosed()) {
@@ -166,7 +155,6 @@ public class CommandHandlerPackageFlowManager {
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
-					clientConnections.remove(clientConnectionKey);
 					holdedIncomingPackets.clear();
 					return;
 				}

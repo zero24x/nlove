@@ -8,7 +8,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Phaser;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,9 +36,9 @@ public class ReverseProxyClientCommandHandler {
 	private NloveMessageConverter nloveMessageConverter = new NloveMessageConverter("REVERSE_PROXY");
 	private static final Logger LOG = LoggerFactory.getLogger(ReverseProxyClientCommandHandler.class);
 	private ConcurrentHashMap<String, CommandHandlerPackageFlowManager> packageFlowManagers = new ConcurrentHashMap<String, CommandHandlerPackageFlowManager>();
-
+	private ConcurrentHashMap<String, Socket> clientConnections = new ConcurrentHashMap<String, Socket>();
 	private ServerSocket reverseProxySocket;
-	private Phaser unackedPacketsPhaser = new Phaser(2);
+	private Object unackedPacketsLock = new Object();
 
 	public void start() throws NKNClientException, WalletException, IOException {
 
@@ -92,11 +91,11 @@ public class ReverseProxyClientCommandHandler {
 						Thread.currentThread().setName(String.format("connectToServiceProvider %s", clientConnectionKey));
 
 						System.out.println(String.format("Accepted local client-to-provider connection 127.0.0.1:" + reverseProxyClientSocket.getPort()));
-						CommandHandlerPackageFlowManager packageFlowManager = new CommandHandlerPackageFlowManager(clientConnectionKey, nknClient);
+						CommandHandlerPackageFlowManager packageFlowManager = new CommandHandlerPackageFlowManager(reverseProxyClientSocket, clientConnectionKey, nknClient);
 						packageFlowManagers.put(clientConnectionKey, packageFlowManager);
 						packageFlowManager.start();
 
-						packageFlowManager.getClientConnections().put(clientConnectionKey, reverseProxyClientSocket);
+						clientConnections.put(clientConnectionKey, reverseProxyClientSocket);
 
 						try {
 							BufferedInputStream clientIn = new BufferedInputStream(reverseProxyClientSocket.getInputStream());
@@ -130,9 +129,11 @@ public class ReverseProxyClientCommandHandler {
 									packageFlowManager.getUnackedPackets().put(packageFlowManager.getSeqNum(),
 											new HoldedObject<ReverseProxyReplyPacket>(new ReverseProxyReplyPacket(destinationFullIdentifier, bytesToSend)));
 
-									unackedPacketsPhaser.arriveAndAwaitAdvance();
-									if (packageFlowManager.getUnackedPackets().size() >= 1) {
+									while (packageFlowManager.getUnackedPackets().size() >= 1) {
 										LOG.debug("Unacked packets too big, pausing");
+										synchronized (unackedPacketsLock) {
+											unackedPacketsLock.wait();
+										}
 									}
 								}
 								LOG.debug("Read reverse proxy client bytes: -1");
@@ -196,7 +197,14 @@ public class ReverseProxyClientCommandHandler {
 				nknClient.sendBinaryMessageAsync(receivedMessage.from, ackHeaderBytes);
 			} else {
 				if (packageFlowManager != null) {
-					packageFlowManager.getUnackedPackets().remove(decodedMsg.getHeader().getSeqNum());
+					int seqNum = decodedMsg.getHeader().getSeqNum();
+					if (packageFlowManager.getUnackedPackets().containsKey(seqNum)) {
+						packageFlowManager.getUnackedPackets().remove(seqNum);
+						synchronized (unackedPacketsLock) {
+							unackedPacketsLock.notify();
+						}
+					}
+
 				}
 			}
 
@@ -205,7 +213,7 @@ public class ReverseProxyClientCommandHandler {
 				return;
 			}
 
-			Socket reverseProxyClientSocket = packageFlowManager.getClientConnections().get(clientConnectionKey);
+			Socket reverseProxyClientSocket = clientConnections.get(clientConnectionKey);
 
 			if (reverseProxyClientSocket != null) {
 				packageFlowManager.forwardPackets(decodedMsg.getHeader().getSeqNum(),

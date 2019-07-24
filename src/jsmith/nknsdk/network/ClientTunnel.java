@@ -116,7 +116,7 @@ public class ClientTunnel {
 
 			return true;
 		} catch (WebbException e) {
-			LOG.warn("RPC Request failed");
+			LOG.warn("RPC Request failed: {}", e.toString());
 			return false;
 		}
 	}
@@ -180,8 +180,7 @@ public class ClientTunnel {
 					if (t instanceof NKNClientException) {
 						LOG.error("Failed to reconnect to ws", t);
 					} else {
-						LOG.error("Failed to reconnect to ws",
-								new NKNClientException("Failed to connect to network", t));
+						LOG.error("Failed to reconnect to ws", new NKNClientException("Failed to connect to network", t));
 					}
 					success[0] = false;
 					shouldReconnect.set(false);
@@ -218,8 +217,7 @@ public class ClientTunnel {
 
 					if (result.has("sigChainBlockHash")) {
 						try {
-							final ByteString newSigChainHash = ByteString
-									.copyFrom(Hex.decode(result.getString("sigChainBlockHash")));
+							final ByteString newSigChainHash = ByteString.copyFrom(Hex.decode(result.getString("sigChainBlockHash")));
 							synchronized (sigChainHashLock) {
 								sigChainHash = newSigChainHash;
 							}
@@ -235,8 +233,7 @@ public class ClientTunnel {
 				case "updateSigChainBlockHash": {
 					if (json.getInt("Error") == ErrorCodes.SUCCESS) {
 						try {
-							final ByteString newSigChainHash = ByteString
-									.copyFrom(Hex.decode(json.getString("Result")));
+							final ByteString newSigChainHash = ByteString.copyFrom(Hex.decode(json.getString("Result")));
 							synchronized (sigChainHashLock) {
 								sigChainHash = newSigChainHash;
 							}
@@ -286,8 +283,8 @@ public class ClientTunnel {
 					final ByteString prevSig = nodeToClientMsg.getPrevSignature();
 					if (prevSig != null && prevSig.size() != 0) {
 						ByteString receiptPayload = ClientEnc.generateNewReceipt(prevSig, this);
-						final ByteString receiptMsg = MessagesP.Message.newBuilder().setMessage(receiptPayload)
-								.setMessageType(MessagesP.MessageType.RECEIPT_MSG).build().toByteString();
+						final ByteString receiptMsg = MessagesP.Message.newBuilder().setMessage(receiptPayload).setMessageType(MessagesP.MessageType.RECEIPT_MSG).build()
+								.toByteString();
 						ws.sendPacket(receiptMsg);
 						LOG.debug("Sending receipt msg");
 					}
@@ -321,8 +318,7 @@ public class ClientTunnel {
 			ws.sendPacket(setClientReq);
 		});
 		ws.setCLoseListener((reason) -> {
-			if (shouldReconnect.get() && !cm.isScheduledStop()
-					&& (reason.getCloseCode() != NORMAL_CLOSURE && reason.getCloseCode() != NO_STATUS_CODE)) {
+			if (shouldReconnect.get() && !cm.isScheduledStop() && (reason.getCloseCode() != NORMAL_CLOSURE && reason.getCloseCode() != NO_STATUS_CODE)) {
 				LOG.info("Connection closed, reconnecting");
 				messageHold.countUp();
 				ws.close();

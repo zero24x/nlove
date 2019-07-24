@@ -6,12 +6,12 @@ import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.nlove.config.NloveConfigManager;
 import com.nlove.message.DecodedNloveMessage;
 import com.nlove.message.NloveMessageConverter;
 import com.nlove.message.NloveMessageInterface;
@@ -41,8 +41,8 @@ public class ReverseProxyProviderCommandHandler {
 	private AtomicInteger numConnections = new AtomicInteger();
 	private static int MAX_CONNECTIONS = 100;
 
-	private Thread packetResenderThread;
-	private Phaser unackedPacketsPhaser = new Phaser(2);
+	private Object unackedPacketsLock = new Object();
+	private Socket serviceSocket;
 
 	public void start() throws NKNClientException, WalletException, IOException {
 
@@ -95,12 +95,12 @@ public class ReverseProxyProviderCommandHandler {
 						Thread.currentThread().setName(String.format("handleProviderClientMessage %s", receivedMessage.from));
 
 						try {
-							Socket serviceSocket = new Socket("localhost", 80);
+							serviceSocket = new Socket("localhost", NloveConfigManager.INSTANCE.getConfig().getProviderPort());
 
 							int numConnectionsNow = numConnections.incrementAndGet();
 							LOG.info("Num connections = {}", numConnectionsNow);
-							CommandHandlerPackageFlowManager packageFlowManager = new CommandHandlerPackageFlowManager(clientConnectionKey, nknClient);
-							packageFlowManager.getClientConnections().put(clientConnectionKey, serviceSocket);
+							CommandHandlerPackageFlowManager packageFlowManager = new CommandHandlerPackageFlowManager(serviceSocket, clientConnectionKey, nknClient);
+
 							packageFlowManagers.put(clientConnectionKey, packageFlowManager);
 							packageFlowManager.start();
 							BufferedInputStream serviceSocketInputStream = new BufferedInputStream(serviceSocket.getInputStream());
@@ -127,9 +127,11 @@ public class ReverseProxyProviderCommandHandler {
 									packageFlowManager.getUnackedPackets().put(newSeqNum,
 											new HoldedObject<ReverseProxyReplyPacket>(new ReverseProxyReplyPacket(receivedMessage.from, bytesToSend)));
 
-									unackedPacketsPhaser.arriveAndAwaitAdvance();
-									if (packageFlowManager.getUnackedPackets().size() >= 1) {
+									while (packageFlowManager.getUnackedPackets().size() >= 1) {
 										LOG.debug("Unacked packets too big, pausing");
+										synchronized (unackedPacketsLock) {
+											unackedPacketsLock.notify();
+										}
 									}
 
 								}
@@ -192,8 +194,13 @@ public class ReverseProxyProviderCommandHandler {
 				nknClient.sendBinaryMessageAsync(receivedMessage.from, ackHeaderBytes);
 			} else {
 				if (packageFlowManager != null) {
-					packageFlowManager.getUnackedPackets().remove(decodedMsg.getHeader().getSeqNum());
-					unackedPacketsPhaser.arriveAndAwaitAdvance();
+					int seqNum = decodedMsg.getHeader().getSeqNum();
+					if (packageFlowManager.getUnackedPackets().containsKey(seqNum)) {
+						packageFlowManager.getUnackedPackets().remove(seqNum);
+						synchronized (unackedPacketsLock) {
+							unackedPacketsLock.notify();
+						}
+					}
 				}
 			}
 
@@ -201,8 +208,6 @@ public class ReverseProxyProviderCommandHandler {
 				LOG.debug("No packageFlowManager found for conn {}", clientConnectionKey);
 				return;
 			}
-
-			Socket serviceSocket = packageFlowManager.getClientConnections().get(clientConnectionKey);
 
 			if (serviceSocket != null) {
 				packageFlowManager.forwardPackets(decodedMsg.getHeader().getSeqNum(),
