@@ -1,22 +1,20 @@
 package com.nlove.message;
 
-import org.bouncycastle.util.Arrays;
+import java.nio.ByteBuffer;
+
 import org.json.JSONObject;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsonorg.JsonOrgModule;
-import com.google.common.primitives.Bytes;
 import com.google.protobuf.ByteString;
 
 import jsmith.nknsdk.client.NKNClient.ReceivedMessage;
 
 public class NloveMessageConverter {
 
-	public static String MAGIC_IDENTIFIER = "<<NLOV>>";
 	private String name;
 	private ObjectMapper mapper;
-	private byte[] IDENTIFIER_BYTES = NloveMessageConverter.MAGIC_IDENTIFIER.toString().getBytes();
 
 	public NloveMessageConverter(String name) {
 		this.name = name;
@@ -29,7 +27,7 @@ public class NloveMessageConverter {
 			return null;
 		}
 
-		JSONObject jsonMsg = new JSONObject(msg.textData.substring(MAGIC_IDENTIFIER.length()));
+		JSONObject jsonMsg = new JSONObject(msg.textData);
 
 		String type = jsonMsg.getString("type");
 		JSONObject payload = jsonMsg.getJSONObject("payload");
@@ -60,7 +58,9 @@ public class NloveMessageConverter {
 		JSONObject msg = new JSONObject();
 
 		try {
-			return String.format("%s%s", MAGIC_IDENTIFIER, mapper.writeValueAsString(c));
+			String msgString = mapper.writeValueAsString(c);
+
+			return msgString;
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -78,8 +78,14 @@ public class NloveMessageConverter {
 		header.setSeqNum(seqNum);
 
 		try {
-			byte[] res = (this.mapper.writeValueAsString(header) + NloveMessageConverter.MAGIC_IDENTIFIER).getBytes();
-			return res;
+			byte[] headerStringBytes = this.mapper.writeValueAsString(header).getBytes();
+			short headerLen = (short) headerStringBytes.length;
+
+			ByteBuffer headerBuf = ByteBuffer.allocate(headerStringBytes.length + Short.BYTES);
+			headerBuf.putShort(headerLen);
+			headerBuf.put(headerStringBytes);
+
+			return headerBuf.array();
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -91,21 +97,24 @@ public class NloveMessageConverter {
 	public DecodedNloveMessage decodeNloveMessage(ByteString data) {
 		DecodedNloveMessage res = new DecodedNloveMessage();
 
-		byte[] fullData = data.toByteArray();
+		ByteBuffer buf = data.asReadOnlyByteBuffer();
 
-		int headerEndPos = Bytes.indexOf(fullData, IDENTIFIER_BYTES);
+		short headerLen = buf.getShort();
+		byte[] header = new byte[headerLen];
 
-		byte[] header = Arrays.copyOf(fullData, headerEndPos);
-
+		buf.get(header, 0, headerLen);
 		String headerString = new String(header);
+
 		JSONObject headerJson = new JSONObject(headerString);
 
 		NloveReverseProxyMessageHeader decodedHeader = mapper.convertValue(headerJson, NloveReverseProxyMessageHeader.class);
 
+		byte[] payload = new byte[buf.remaining()];
+		buf.get(payload);
+
 		res.setHeader(decodedHeader);
-		res.setPayload(Arrays.copyOfRange(fullData, headerEndPos + IDENTIFIER_BYTES.length, fullData.length));
+		res.setPayload(payload);
 
 		return res;
 	}
-
 }
