@@ -8,6 +8,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Phaser;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,7 @@ public class ReverseProxyClientCommandHandler {
 	private ConcurrentHashMap<String, CommandHandlerPackageFlowManager> packageFlowManagers = new ConcurrentHashMap<String, CommandHandlerPackageFlowManager>();
 
 	private ServerSocket reverseProxySocket;
+	private Phaser unackedPacketsPhaser = new Phaser(2);
 
 	public void start() throws NKNClientException, WalletException, IOException {
 
@@ -127,9 +129,10 @@ public class ReverseProxyClientCommandHandler {
 									nknClient.sendBinaryMessageAsync(destinationFullIdentifier, bytesToSend);
 									packageFlowManager.getUnackedPackets().put(packageFlowManager.getSeqNum(),
 											new HoldedObject<ReverseProxyReplyPacket>(new ReverseProxyReplyPacket(destinationFullIdentifier, bytesToSend)));
-									if (packageFlowManager.getUnackedPackets().size() == 1000) {
+
+									unackedPacketsPhaser.arriveAndAwaitAdvance();
+									if (packageFlowManager.getUnackedPackets().size() >= 1) {
 										LOG.debug("Unacked packets too big, pausing");
-										Thread.sleep(1000);
 									}
 								}
 								LOG.debug("Read reverse proxy client bytes: -1");

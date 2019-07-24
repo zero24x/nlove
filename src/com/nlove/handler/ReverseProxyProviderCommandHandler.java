@@ -42,6 +42,7 @@ public class ReverseProxyProviderCommandHandler {
 	private static int MAX_CONNECTIONS = 100;
 
 	private Thread packetResenderThread;
+	private Phaser unackedPacketsPhaser = new Phaser(2);
 
 	public void start() throws NKNClientException, WalletException, IOException {
 
@@ -74,8 +75,6 @@ public class ReverseProxyProviderCommandHandler {
 		});
 
 	}
-
-	Phaser unackedPacketsPhaser = new Phaser(2);
 
 	private void handleProviderClientMessage(ReceivedMessage receivedMessage) throws IOException {
 
