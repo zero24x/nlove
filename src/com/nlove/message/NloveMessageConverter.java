@@ -34,9 +34,7 @@ public class NloveMessageConverter {
 		String type = jsonMsg.getString("type");
 		JSONObject payload = jsonMsg.getJSONObject("payload");
 
-		if (type.equals(MessageTypeEnum.CHAT.toString())) {
-			return mapper.convertValue(payload, NloveChatMessage.class);
-		} else if (type.equals(MessageTypeEnum.SEARCH_REQUEST.toString())) {
+		if (type.equals(MessageTypeEnum.SEARCH_REQUEST.toString())) {
 			return mapper.convertValue(payload, NloveSearchRequestMessage.class);
 		} else if (type.equals(MessageTypeEnum.SEARCH_REQUEST_REPLY.toString())) {
 			return mapper.convertValue(payload, NloveSearchRequestReplyMessage.class);
@@ -71,10 +69,13 @@ public class NloveMessageConverter {
 		return null;
 	}
 
-	public byte[] makeHeaderBytes(int clientPort, Boolean socketClosed) {
+	public byte[] makeHeaderBytes(boolean isAck, int clientPort, boolean socketClosed, int ackNum, int seqNum) {
 		NloveReverseProxyMessageHeader header = new NloveReverseProxyMessageHeader();
+		header.setIsAck(isAck);
 		header.setClientPort(clientPort);
 		header.setSocketClosed(socketClosed);
+		header.setAckNum(ackNum);
+		header.setSeqNum(seqNum);
 
 		try {
 			byte[] res = (this.mapper.writeValueAsString(header) + NloveMessageConverter.MAGIC_IDENTIFIER).getBytes();

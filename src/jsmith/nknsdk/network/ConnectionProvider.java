@@ -42,8 +42,8 @@ public class ConnectionProvider {
 	};
 
 	private static int maxRetries = 10;
-	private static int rpcCallTimeoutMS = 10000;
-	private static int messageAckTimeoutMS = 10000;
+	private static int rpcCallTimeoutMS = 5000;
+	private static int messageAckTimeoutMS = 5000;
 
 	public static int maxRetries() {
 		synchronized (lock) {

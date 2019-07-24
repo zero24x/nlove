@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.nlove.download.FileDownloadManager;
-import com.nlove.message.NloveChatMessage;
 import com.nlove.message.NloveDownloadDataMessage;
 import com.nlove.message.NloveDownloadRequestMessage;
 import com.nlove.message.NloveDownloadRequestReplyMessage;
@@ -153,12 +152,4 @@ public class ClientCommandHandler {
 		this.client.sendTextMessageAsync(destination, this.nloveMessageConverter.toMsgString(m));
 
 	}
-
-	public void chat(String text) throws WalletException {
-		NloveChatMessage c = new NloveChatMessage();
-		c.setText(text);
-
-		this.client.publishTextMessageAsync(ClientCommandHandler.lobbyTopic, 0, this.nloveMessageConverter.toMsgString(c));
-	}
-
 }

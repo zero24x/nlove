@@ -26,12 +26,12 @@ public class Main {
 
 	public static void main(String[] args) throws NKNClientException, WalletException, InterruptedException, IOException {
 
-		final String helpText = "Welcome to nlove! Important commands: \r\n\r\n" + "help --> View this command help\r\n" + "list providers --> Shows names of all providers\r\n"
-				+ "search <searchterm> --> Search for providers offering files with  \"kitties\" in the name\r\n"
+		System.out.println("Loading, please wait ...");
+
+		final String helpText = "Welcome to nlove! Type one of this commands: \r\n\r\n" + "help --> View this command help\r\n"
+				+ "list providers --> Shows names of all providers\r\n" + "search <searchterm> --> Search for providers offering files with  \"kitties\" in the name\r\n"
 				+ "connect <providerName> --> Connect to provider with name <providerName>\r\n" + "\r\nprovider enable --> Start becoming a file sharing provider"
 				+ "\r\nprovider disable --> Stop providing file sharing services";
-
-		System.out.println(helpText);
 
 		boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
 
@@ -40,13 +40,12 @@ public class Main {
 		NloveConfigManager.INSTANCE.loadOrCreate();
 		NloveConfig config = NloveConfigManager.INSTANCE.getConfig();
 
-		LOG.info("Your username: {}", config.getUsername());
-		LOG.info("Estimated active global nlove instances: {}", NKNExplorer.getSubscribers(ClientCommandHandler.lobbyTopic, 0).length);
-		LOG.info("Provider status: {}", config.getProviderEnabled() ? "ENABLED" : "DISABLED");
+		System.out.println(String.format("Your username: %s", config.getUsername()));
+		System.out.println(String.format("Estimated active global nlove instances: %d", NKNExplorer.getSubscribers(ClientCommandHandler.lobbyTopic, 0).length));
+		System.out.println(String.format("Provider status: %s", config.getProviderEnabled() ? "ENABLED" : "DISABLED"));
 
 		ClientCommandHandler cch = new ClientCommandHandler();
 		cch.start();
-		Thread.sleep(500);
 
 		InputStreamReader in = new InputStreamReader(System.in);
 		BufferedReader br = new BufferedReader(in);
@@ -58,9 +57,12 @@ public class Main {
 		ReverseProxyClientCommandHandler rch = new ReverseProxyClientCommandHandler();
 		rch.start();
 
+		System.out.println("Loading done!");
+		System.out.println(helpText);
+
 		while (true) {
 			String line = br.readLine();
-			String[] splitted = line.split("\\s+");
+			String[] splitted = line.split("[\\s]+|\"([^\"]*)\"");
 
 			if (splitted[0].equals("search")) {
 				cch.search(splitted[1]);
