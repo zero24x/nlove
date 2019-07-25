@@ -102,15 +102,13 @@ public class ReverseProxyProviderCommandHandler {
 
 							int bytesRead = 0;
 							byte[] buffer = new byte[8192];
-							ByteBuffer buf = ByteBuffer.allocateDirect(Short.BYTES + Short.MAX_VALUE + buffer.length);
 
 							try {
 								while ((bytesRead = serviceSocketInputStream.read(buffer)) != -1) {
 
 									byte[] headerBytes = nloveMessageConverter.makeHeaderBytes(false, clientPort, false, packageFlowManager.getAckNum(),
 											packageFlowManager.getSeqNum());
-
-									buf.clear();
+									ByteBuffer buf = ByteBuffer.allocate(bytesRead + headerBytes.length);
 									buf.put(headerBytes);
 									buf.put(buffer, 0, bytesRead);
 									buf.flip();
