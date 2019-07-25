@@ -1,11 +1,13 @@
 package com.nlove.provider;
 
+import com.google.protobuf.ByteString;
+
 public class ReverseProxyReplyPacket {
 
-	private byte[] data;
+	private ByteString data;
 	private String destination;
 
-	public ReverseProxyReplyPacket(String destination, byte[] data) {
+	public ReverseProxyReplyPacket(String destination, ByteString data) {
 		this.destination = destination;
 		this.data = data;
 	}
@@ -18,11 +20,11 @@ public class ReverseProxyReplyPacket {
 		this.destination = destination;
 	}
 
-	public byte[] getData() {
+	public ByteString getData() {
 		return data;
 	}
 
-	public void setData(byte[] data) {
+	public void setData(ByteString data) {
 		this.data = data;
 	}
 

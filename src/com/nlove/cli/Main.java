@@ -26,12 +26,18 @@ public class Main {
 
 	public static void main(String[] args) throws NKNClientException, WalletException, InterruptedException, IOException {
 
+		String version = Main.class.getPackage().getImplementationVersion();
+		if (version != null) {
+			System.out.println("Software version: " + version);
+		}
 		System.out.println("Loading, please wait ...");
 
-		final String helpText = "Welcome to nlove! Type one of this commands: \r\n\r\n" + "help --> View this command help\r\n"
-				+ "list providers --> Shows names of all providers\r\n" + "search <searchterm> --> Search for providers offering files with  \"kitties\" in the name\r\n"
-				+ "connect <providerName> --> Connect to provider with name <providerName>\r\n" + "\r\nprovider enable --> Start becoming a file sharing provider"
-				+ "\r\nprovider disable --> Stop providing file sharing services";
+		final String helpText = String
+				.format("Welcome to nlove! To find file providers, join channel #nlove on D-Chat! (See https://gitlab.com/losnappas/d-chat) \r\nType one of this commands: \r\n\r\n"
+						+ "help --> View this command help\r\n" + "list providers --> Shows names of all providers\r\n"
+						+ "search <searchterm> --> Search for providers offering files with  \"kitties\" in the name\r\n"
+						+ "connect <providerName> --> Connect to provider with name <providerName>\r\n" + "\r\nprovider enable --> Start becoming a file sharing provider"
+						+ "\r\nprovider disable --> Stop providing file sharing services", version);
 
 		boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
 
@@ -62,6 +68,9 @@ public class Main {
 
 		while (true) {
 			String line = br.readLine();
+			if (line == null) {
+				return;
+			}
 			String[] splitted = line.split("[\\s]+|\"([^\"]*)\"");
 
 			if (splitted[0].equals("search")) {

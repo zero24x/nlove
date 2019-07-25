@@ -8,10 +8,6 @@ import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.nlove.download.FileDownloadManager;
-import com.nlove.message.NloveDownloadDataMessage;
-import com.nlove.message.NloveDownloadRequestMessage;
-import com.nlove.message.NloveDownloadRequestReplyMessage;
 import com.nlove.message.NloveMessageConverter;
 import com.nlove.message.NloveMessageInterface;
 import com.nlove.message.NloveSearchRequestMessage;
@@ -36,7 +32,6 @@ public class ClientCommandHandler {
 	public static String lobbyTopic = "nlove-lobby";
 	private static String providerTopic = "nlove-providers";
 	private NloveMessageConverter nloveMessageConverter = new NloveMessageConverter("CLIENT");
-	private FileDownloadManager fileDownloadManager;
 
 	private static final Logger LOG = LoggerFactory.getLogger(ClientCommandHandler.class);
 
@@ -51,7 +46,6 @@ public class ClientCommandHandler {
 		this.wallet = wallet;
 
 		this.identity = new Identity(ClientCommandHandler.CLIENT_IDENTIFIER, wallet);
-		this.fileDownloadManager = new FileDownloadManager();
 
 		this.client = new NKNClient(this.identity);
 
@@ -59,11 +53,6 @@ public class ClientCommandHandler {
 			this.handle(msg);
 		}).start();
 
-		Runtime.getRuntime().addShutdownHook(new Thread() {
-			public void run() {
-				client.close();
-			}
-		});
 		this.subscribe();
 		this.resubscribeChecker();
 	}
@@ -107,16 +96,7 @@ public class ClientCommandHandler {
 	}
 
 	private void handle(ReceivedMessage receivedMessage) {
-
 		NloveMessageInterface c = this.nloveMessageConverter.parseMsg(receivedMessage);
-
-		if (c instanceof NloveDownloadRequestReplyMessage) {
-			NloveDownloadRequestReplyMessage r = (NloveDownloadRequestReplyMessage) this.nloveMessageConverter.parseMsg(receivedMessage);
-			this.fileDownloadManager.handleDownloadRequestReplyMessage(receivedMessage.msgId.toString(), r);
-		} else if (c instanceof NloveDownloadDataMessage) {
-			this.fileDownloadManager.handleDownloadRequestDataMessage(receivedMessage.msgId.toString(), ((NloveDownloadDataMessage) c));
-		}
-
 	}
 
 	public void search(String term) throws WalletException {
@@ -137,19 +117,6 @@ public class ClientCommandHandler {
 				}
 			});
 		}
-
-	}
-
-	public void download(String fileId) {
-		String[] idParts = fileId.split("/");
-
-		String destination = idParts[0];
-		fileId = fileId.substring(fileId.indexOf("/") + 1);
-
-		final NloveDownloadRequestMessage m = new NloveDownloadRequestMessage();
-		m.setFileId(fileId);
-
-		this.client.sendTextMessageAsync(destination, this.nloveMessageConverter.toMsgString(m));
 
 	}
 }

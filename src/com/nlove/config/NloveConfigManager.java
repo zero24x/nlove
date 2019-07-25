@@ -26,6 +26,8 @@ public class NloveConfigManager {
 	public synchronized void loadOrCreate() throws IOException {
 
 		if (!configFile.exists() || configFile.length() == 0) {
+			new File(System.getProperty("user.dir"), "config").mkdir();
+
 			System.out.println("Welcome to Nlove! Please type the username you want to use and the return key to confirm:");
 
 			InputStreamReader in = new InputStreamReader(System.in);

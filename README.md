@@ -35,7 +35,6 @@ Note: To change the provider settings e.g. port, edit the file `config/config.js
 To stop being a provider, run `provider disable`.
 
 # Limitations:
-To prevent abuse (sharing bad things) some search terms are blacklisted.
 The network is limited to 1000 participants, we do not want to consume too much bandwidth!
 
 # Start it:

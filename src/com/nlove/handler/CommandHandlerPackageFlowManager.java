@@ -23,6 +23,7 @@ public class CommandHandlerPackageFlowManager {
 	private String name;
 	private ConcurrentSkipListMap<Integer, HoldedObject<ReverseProxyReplyPacket>> unackedPackets = new ConcurrentSkipListMap<Integer, HoldedObject<ReverseProxyReplyPacket>>();
 	private static final Logger LOG = LoggerFactory.getLogger(CommandHandlerPackageFlowManager.class);
+	public static final int MAX_UNACKED_PACKETS = 10;
 
 	private ConcurrentHashMap<Integer, HoldedObject<ReverseProxyDecodedPacket>> holdedIncomingPackets = new ConcurrentHashMap<Integer, HoldedObject<ReverseProxyDecodedPacket>>();
 	private Thread packetResenderThread;
@@ -147,8 +148,8 @@ public class CommandHandlerPackageFlowManager {
 			ackNum += packetPayloadLen;
 
 			try {
-				if (nextPacket.getMessage().getHeader().getSocketClosed() && 7 == 8) {
-					LOG.debug("{} Received socket closed message from provider", this.name);
+				if (nextPacket.getMessage().getHeader().getSocketClosed()) {
+					LOG.info("{} Received socket closed message from provider", this.name);
 					if (!localClientSocket.isClosed()) {
 						localClientSocket.getOutputStream().flush();
 					}

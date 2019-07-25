@@ -36,12 +36,6 @@ public class NloveMessageConverter {
 			return mapper.convertValue(payload, NloveSearchRequestMessage.class);
 		} else if (type.equals(MessageTypeEnum.SEARCH_REQUEST_REPLY.toString())) {
 			return mapper.convertValue(payload, NloveSearchRequestReplyMessage.class);
-		} else if (type.equals(MessageTypeEnum.DOWNLOAD_REQUEST.toString())) {
-			return mapper.convertValue(payload, NloveDownloadRequestMessage.class);
-		} else if (type.equals(MessageTypeEnum.DOWNLOAD_REQUEST_REPLY.toString())) {
-			return mapper.convertValue(payload, NloveDownloadRequestReplyMessage.class);
-		} else if (type.equals(MessageTypeEnum.DOWNLOAD_DATA.toString())) {
-			return mapper.convertValue(payload, NloveDownloadDataMessage.class);
 		} else if (type.equals(MessageTypeEnum.REVERSE_PROXY_CONNECT.toString())) {
 			return mapper.convertValue(payload, NloveReverseProxyConnectMessage.class);
 		}
