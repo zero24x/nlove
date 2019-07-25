@@ -2,9 +2,8 @@ package com.nlove.handler;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import org.slf4j.Logger;
@@ -25,7 +24,7 @@ public class CommandHandlerPackageFlowManager {
 	private ConcurrentSkipListMap<Integer, HoldedObject<ReverseProxyReplyPacket>> unackedPackets = new ConcurrentSkipListMap<Integer, HoldedObject<ReverseProxyReplyPacket>>();
 	private static final Logger LOG = LoggerFactory.getLogger(CommandHandlerPackageFlowManager.class);
 
-	private HashMap<Integer, HoldedObject<ReverseProxyDecodedPacket>> holdedIncomingPackets = new HashMap<Integer, HoldedObject<ReverseProxyDecodedPacket>>();
+	private ConcurrentHashMap<Integer, HoldedObject<ReverseProxyDecodedPacket>> holdedIncomingPackets = new ConcurrentHashMap<Integer, HoldedObject<ReverseProxyDecodedPacket>>();
 	private Thread packetResenderThread;
 	private Thread reportHoldedPacketsThread;
 	private Socket localClientSocket;
@@ -51,6 +50,8 @@ public class CommandHandlerPackageFlowManager {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		this.ackNum = 0;
+		this.seqNum = 0;
 		this.packetResenderThread.interrupt();
 		this.reportHoldedPacketsThread.interrupt();
 		this.holdedIncomingPackets.clear();
@@ -81,11 +82,11 @@ public class CommandHandlerPackageFlowManager {
 		this.seqNum += toAdd;
 	}
 
-	public HashMap<Integer, HoldedObject<ReverseProxyDecodedPacket>> getHoldedIncomingPackets() {
+	public ConcurrentHashMap<Integer, HoldedObject<ReverseProxyDecodedPacket>> getHoldedIncomingPackets() {
 		return holdedIncomingPackets;
 	}
 
-	public void setHoldedIncomingPackets(HashMap<Integer, HoldedObject<ReverseProxyDecodedPacket>> holdedIncomingPackets) {
+	public void setHoldedIncomingPackets(ConcurrentHashMap<Integer, HoldedObject<ReverseProxyDecodedPacket>> holdedIncomingPackets) {
 		this.holdedIncomingPackets = holdedIncomingPackets;
 	}
 
@@ -112,40 +113,41 @@ public class CommandHandlerPackageFlowManager {
 
 	}
 
-	public void forwardPackets(Integer seqNum, HoldedObject<ReverseProxyDecodedPacket> receivedPacket) {
+	public synchronized void forwardPackets(Integer seqNum, HoldedObject<ReverseProxyDecodedPacket> receivedPacket) {
+
 		if (receivedPacket.getHoldedObject().getMessage().getHeader().isAck()) {
-			LOG.debug("Received ACK, not processing!");
 			return;
-		} else {
-			this.holdedIncomingPackets.put(seqNum, receivedPacket);
+		}
+
+		this.holdedIncomingPackets.put(seqNum, receivedPacket);
+		if (holdedIncomingPackets.size() >= 1000) {
+			LOG.debug("{} holdedPackets grew big!", this.name);
 		}
 
 		ReverseProxyDecodedPacket nextPacket = null;
 
-		Integer nextPacketSeqNum = null;
+		for (Entry<Integer, HoldedObject<ReverseProxyDecodedPacket>> possibleNextPacket : holdedIncomingPackets.entrySet()) {
 
-		Iterator<Entry<Integer, HoldedObject<ReverseProxyDecodedPacket>>> it = holdedIncomingPackets.entrySet().iterator();
-		while (it.hasNext()) {
-			Entry<Integer, HoldedObject<ReverseProxyDecodedPacket>> possibleNextPacket = it.next();
-			int receivedPacketSeqNum = receivedPacket.getHoldedObject().getMessage().getHeader().getSeqNum();
-			int receivedPacketPayloadLength = receivedPacket.getHoldedObject().getMessage().getPayload().length;
+			int packetSeqNum = possibleNextPacket.getValue().getHoldedObject().getMessage().getHeader().getSeqNum();
+			int packetPayloadLen = possibleNextPacket.getValue().getHoldedObject().getMessage().getPayload().length;
 
-			Boolean isNextSequence = ackNum + receivedPacketPayloadLength == receivedPacketSeqNum;
-			if (isNextSequence) {
-				ackNum = receivedPacketSeqNum;
-				nextPacket = possibleNextPacket.getValue().getHoldedObject();
-				nextPacketSeqNum = nextPacket.getMessage().getHeader().getSeqNum();
+			Boolean isNextSequence = false;
 
+			if (ackNum == 0 && packetSeqNum == 0) {
+				isNextSequence = true;
+			} else {
+				isNextSequence = ackNum == packetSeqNum;
 			}
-		}
-		if (nextPacketSeqNum != null) {
-			this.holdedIncomingPackets.remove(nextPacketSeqNum);
-		}
+			if (!isNextSequence) {
+				continue;
+			}
 
-		if (nextPacket != null) {
+			this.holdedIncomingPackets.remove(possibleNextPacket.getKey());
+			nextPacket = possibleNextPacket.getValue().getHoldedObject();
+			ackNum += packetPayloadLen;
+
 			try {
-
-				if (nextPacket.getMessage().getHeader().getSocketClosed()) {
+				if (nextPacket.getMessage().getHeader().getSocketClosed() && 7 == 8) {
 					LOG.debug("{} Received socket closed message from provider", this.name);
 					if (!localClientSocket.isClosed()) {
 						localClientSocket.getOutputStream().flush();
@@ -156,28 +158,21 @@ public class CommandHandlerPackageFlowManager {
 						e.printStackTrace();
 					}
 					holdedIncomingPackets.clear();
-					return;
-				}
+				} else {
 
-				if (holdedIncomingPackets.size() >= 1000) {
-					LOG.debug("{} holdedPackets grew big!", this.name);
-					// holdedIncomingPackets.clear();
-				}
+					if (!localClientSocket.isClosed()) {
+						localClientSocket.getOutputStream().write(nextPacket.getMessage().getPayload());
+						localClientSocket.getOutputStream().flush();
+					}
 
-				if (!localClientSocket.isClosed()) {
-					localClientSocket.getOutputStream().write(nextPacket.getMessage().getPayload());
-					localClientSocket.getOutputStream().flush();
+					if (localClientSocket.isClosed()) {
+						this.stop();
+					}
 				}
-
-				if (localClientSocket.isClosed()) {
-					this.stop();
-				}
-
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
 		}
-
 	}
 
 	public ConcurrentSkipListMap<Integer, HoldedObject<ReverseProxyReplyPacket>> getUnackedPackets() {

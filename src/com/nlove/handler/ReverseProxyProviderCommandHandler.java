@@ -107,30 +107,27 @@ public class ReverseProxyProviderCommandHandler {
 
 							int bytesRead = 0;
 							byte[] buffer = new byte[8192];
-							int newSeqNum = 0;
 
 							try {
 								while ((bytesRead = serviceSocketInputStream.read(buffer)) != -1) {
-									newSeqNum = newSeqNum + bytesRead;
-									packageFlowManager.setSeqNum(newSeqNum);
 
-									byte[] headerBytes = nloveMessageConverter.makeHeaderBytes(false, clientPort, false, packageFlowManager.getAckNum(), newSeqNum);
+									byte[] headerBytes = nloveMessageConverter.makeHeaderBytes(false, clientPort, false, packageFlowManager.getAckNum(),
+											packageFlowManager.getSeqNum());
 									ByteArrayOutputStream bos = new ByteArrayOutputStream(headerBytes.length + buffer.length);
 									bos.write(headerBytes);
 									bos.write(buffer, 0, bytesRead);
 									bos.flush();
-
 									byte[] bytesToSend = bos.toByteArray();
 
 									nknClient.sendBinaryMessageAsync(receivedMessage.from, bytesToSend);
 
-									packageFlowManager.getUnackedPackets().put(newSeqNum,
+									packageFlowManager.getUnackedPackets().put(packageFlowManager.getSeqNum(),
 											new HoldedObject<ReverseProxyReplyPacket>(new ReverseProxyReplyPacket(receivedMessage.from, bytesToSend)));
-
-									while (packageFlowManager.getUnackedPackets().size() >= 1) {
+									packageFlowManager.addToSeqNum(bytesRead);
+									while (packageFlowManager.getUnackedPackets().size() >= 50) {
 										LOG.debug("Unacked packets too big, pausing");
 										synchronized (unackedPacketsLock) {
-											unackedPacketsLock.notify();
+											unackedPacketsLock.wait();
 										}
 									}
 
@@ -143,9 +140,7 @@ public class ReverseProxyProviderCommandHandler {
 							try {
 
 								byte[] payload = new byte[] { 1 };
-								newSeqNum += payload.length;
-								packageFlowManager.setSeqNum(newSeqNum);
-								byte[] headerBytes = nloveMessageConverter.makeHeaderBytes(false, clientPort, true, packageFlowManager.getAckNum(), newSeqNum);
+								byte[] headerBytes = nloveMessageConverter.makeHeaderBytes(false, clientPort, true, packageFlowManager.getAckNum(), packageFlowManager.getSeqNum());
 								ByteArrayOutputStream bos = new ByteArrayOutputStream(headerBytes.length + payload.length);
 								bos.write(headerBytes);
 								bos.write(payload);
@@ -154,9 +149,9 @@ public class ReverseProxyProviderCommandHandler {
 								byte[] bytesToSend = bos.toByteArray();
 
 								nknClient.sendBinaryMessageAsync(receivedMessage.from, bytesToSend);
-								packageFlowManager.getUnackedPackets().put(newSeqNum,
+								packageFlowManager.getUnackedPackets().put(packageFlowManager.getSeqNum(),
 										new HoldedObject<ReverseProxyReplyPacket>(new ReverseProxyReplyPacket(receivedMessage.from, bytesToSend)));
-
+								packageFlowManager.addToSeqNum(payload.length);
 								packageFlowManager.stop();
 								packageFlowManagers.remove(clientConnectionKey);
 
