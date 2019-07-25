@@ -68,9 +68,6 @@ public class Main {
 
 		while (true) {
 			String line = br.readLine();
-			if (line == null) {
-				return;
-			}
 			String[] splitted = line.split("[\\s]+|\"([^\"]*)\"");
 
 			if (splitted[0].equals("search")) {
