@@ -43,6 +43,9 @@
 					<target>1.8</target>
 					<optimize>true</optimize>
 					<debug>false</debug>
+					<excludes>
+						<exclude>**/api/test/omi/*.java</exclude>
+					</excludes>
 				</configuration>
 			</plugin>
 
@@ -91,7 +94,6 @@
 						<manifestEntries>
 							<Built-By>someone</Built-By>
 						</manifestEntries>
-						<recompressAddedZips>true</recompressAddedZips>
 						<compress>true</compress>
 					</archive>
 				</configuration>
@@ -148,11 +150,6 @@
 			<version>1.4</version>
 		</dependency>
 		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-			<version>2.6</version>
-		</dependency>
-		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-json-org</artifactId>
 			<version>2.9.9</version>
@@ -166,18 +163,6 @@
 			<groupId>org.glassfish.tyrus</groupId>
 			<artifactId>tyrus-container-jdk-client</artifactId>
 			<version>1.15</version>
-		</dependency>
-		<!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-collections4</artifactId>
-			<version>4.4</version>
-			<classifier>test-sources</classifier>
-		</dependency>
-		<dependency>
-			<groupId>de.scrum-master</groupId>
-			<artifactId>jar-class-loader</artifactId>
-			<version>1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>

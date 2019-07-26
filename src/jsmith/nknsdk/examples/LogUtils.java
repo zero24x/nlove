@@ -46,11 +46,7 @@ public class LogUtils {
 						DateTimeFileCreationStrategy.DEFAULT_LOG_FILE_EXTENSION, 512 * 1000, Duration.standardDays(60)), true),
 				true);
 
-		if (level == TPLogger.DEBUG) {
-			TPLogger.setLogFunction(new LogFilter(new LogFunctionMultiplexer(SimpleLogFunction.CONSOLE_LOG_FUNCTION, fileLog)));
-		} else {
-			TPLogger.setLogFunction(new LogFilter(fileLog));
-		}
+		TPLogger.setLogFunction(new LogFilter(new LogFunctionMultiplexer(SimpleLogFunction.CONSOLE_LOG_FUNCTION, fileLog)));
 
 		TPLoggerFactory.USE_SHORT_NAMES = false;
 
@@ -70,11 +66,9 @@ public class LogUtils {
 			String shortname = name.contains(".") ? name.substring(name.lastIndexOf('.') + 1) : name;
 			shortname += " @" + Thread.currentThread().getName();
 			if (level <= TPLogger.DEBUG) {
-				if (name.startsWith("jsmith.nknsdk.")) { // Filter by package
-					parent.log(shortname, time, level, marker, content);
-				}
-			} else {
 				parent.log(shortname, time, level, marker, content);
+			} else {
+				parent.log("", time, level, marker, content);
 			}
 		}
 

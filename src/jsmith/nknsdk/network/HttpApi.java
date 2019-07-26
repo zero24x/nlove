@@ -37,21 +37,21 @@ public class HttpApi {
 		return new JSONObject(response.getBody());
 	}
 
-	/**
-	 * @TODO implement
-	 * 
-	 * @param server
-	 * @param topic
-	 * @return
-	 */
-	public Integer getFirstAvailableTopicBucket(InetSocketAddress server, String topic) {
+	public static Integer getFirstAvailableTopicBucket(InetSocketAddress server, String topic) {
 		final JSONObject params = new JSONObject();
 		params.put("topic", topic);
 
 		final JSONObject response = rpcCallJson(server, "getfirstavailabletopicbucket", params);
-		final JSONObject result = response.getJSONObject("result");
+		return response.getInt("result");
+	}
 
-		return 0;
+	public static Integer getTopicBucketsCount(InetSocketAddress server, String topic) {
+		final JSONObject params = new JSONObject();
+		params.put("topic", topic);
+
+		final JSONObject response = rpcCallJson(server, "gettopicbucketscount", params);
+
+		return response.getInt("result");
 	}
 
 	public static NKNExplorer.Subscriber[] getSubscribers(InetSocketAddress server, String topic, int bucket) {

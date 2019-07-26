@@ -15,11 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.darkyen.tproll.TPLogger;
-import com.nlove.config.NloveConfig;
-import com.nlove.config.NloveConfigManager;
+import com.nlove.config.NloveProfile;
+import com.nlove.config.NloveProfileManager;
 import com.nlove.handler.ClientCommandHandler;
-import com.nlove.handler.ReverseProxyClientCommandHandler;
-import com.nlove.provider.ProviderManager;
 
 import jsmith.nknsdk.client.NKNClientException;
 import jsmith.nknsdk.client.NKNExplorer;
@@ -33,16 +31,12 @@ public class Main {
 
 		String version = Main.class.getPackage().getImplementationVersion();
 		if (version != null) {
-			LOG.info("Starting nlove version: " + version);
+			LOG.info("Starting nlove version {}, please wait... ", version);
 		}
-		LOG.info("Loading, please wait ...");
 
 		final String helpText = String
-				.format("Welcome to nlove! To find file providers, join channel #nlove on D-Chat! (See https://gitlab.com/losnappas/d-chat) \r\nType one of this commands: \r\n\r\n"
-						+ "help --> View this command help\r\n" + "list providers --> Shows names of all providers\r\n"
-						+ "search <searchterm> --> Search for providers offering files with  \"kitties\" in the name\r\n"
-						+ "connect <providerName> --> Connect to provider with name <providerName>\r\n" + "\r\nprovider enable --> Start becoming a file sharing provider"
-						+ "\r\nprovider disable --> Stop providing file sharing services", version);
+				.format("Welcome to nlove! For discussion and support join #nlove on D-Chat! (See https://gitlab.com/losnappas/d-chat) \r\nType one of this commands: \r\n\r\n"
+						+ "update-profile --> Update your profile\r\n" + "roll --> Find a random user profile\r\n" + "help --> View this command help\r\n", version);
 
 		Options options = new Options();
 		options.addOption("debug", false, "display debug information");
@@ -54,12 +48,11 @@ public class Main {
 
 		setupLogging(isDebug ? TPLogger.DEBUG : TPLogger.INFO);
 
-		NloveConfigManager.INSTANCE.loadOrCreate();
-		NloveConfig config = NloveConfigManager.INSTANCE.getConfig();
+		NloveProfileManager.INSTANCE.loadOrCreate();
+		NloveProfile profile = NloveProfileManager.INSTANCE.getProfile();
 
-		LOG.info(String.format("Your username: %s", config.getUsername()));
-		LOG.info(String.format("Estimated active global nlove instances: %d", NKNExplorer.getSubscribers(ClientCommandHandler.lobbyTopic, 0).length));
-		LOG.info(String.format("Provider status: %s", config.getProviderEnabled() ? "ENABLED" : "DISABLED"));
+		LOG.info(String.format("Your username: %s", profile.getUsername()));
+		LOG.info(String.format("Estimated active global nlove instances: %d", NKNExplorer.getSubscribers(ClientCommandHandler.LOBBY_TOPIC, 0).length));
 
 		ClientCommandHandler cch = new ClientCommandHandler();
 		cch.start();
@@ -67,54 +60,28 @@ public class Main {
 		InputStreamReader in = new InputStreamReader(System.in);
 		BufferedReader br = new BufferedReader(in);
 
-		if (config.getProviderEnabled()) {
-			new ProviderManager().start();
-		}
-
-		ReverseProxyClientCommandHandler rch = new ReverseProxyClientCommandHandler();
-		rch.start();
-
 		LOG.info("Loading done!");
 		LOG.info(helpText);
 
 		while (true) {
 			String line = br.readLine();
-			String[] splitted = line.split("[\\s]+|\"([^\"]*)\"");
+			try {
+				String[] splitted = line.split("[\\s]+|\"([^\"]*)\"");
 
-			if (splitted[0].equals("search")) {
-				cch.search(splitted[1]);
-				LOG.info("CLIENT: Sent command: search " + splitted[1]);
+				LOG.info("Got command: {}", line);
 
-			} else if (splitted[0].equals("connect")) {
-				LOG.info("CLIENT: Got command: connect " + splitted[1]);
-				rch.connectToServiceProvider(splitted[1]);
-			} else if (splitted[0].equals("provider") && splitted[1].equals("enable")) {
-				if (config.getProviderEnabled()) {
-					LOG.info("Provider already enabled!");
+				if (splitted[0].equals("update-profile")) {
+					NloveProfileManager.INSTANCE.updateProfile();
+				} else if (splitted[0].equals("roll")) {
+					cch.roll();
+				} else if (line.equals("help")) {
+					LOG.info(helpText);
 				} else {
-					config.setProviderEnabled(true);
-					NloveConfigManager.INSTANCE.saveConfig();
-					LOG.info(NloveConfigManager.RESTART_NEEDED);
-					Runtime.getRuntime().halt(0);
+					LOG.info("Unknown command, please read help: " + helpText);
 				}
-			} else if (splitted[0].equals("provider") && splitted[1].equals("disable")) {
-
-				if (!config.getProviderEnabled()) {
-					LOG.warn("Provider already disabled!");
-				} else {
-					config.setProviderPort(null);
-					config.setProviderEnabled(false);
-					NloveConfigManager.INSTANCE.saveConfig();
-					LOG.warn(NloveConfigManager.RESTART_NEEDED);
-					Runtime.getRuntime().halt(0);
-				}
-
-			} else if (line.equals("help")) {
-				LOG.info(helpText);
-			} else {
-				LOG.info("Unknown command, please read help: " + helpText);
+			} catch (NullPointerException e) {
+				continue;
 			}
 		}
 	}
-
 }
