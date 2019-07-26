@@ -33,12 +33,12 @@ public class ProviderManager {
 		NloveConfig config = NloveConfigManager.INSTANCE.getConfig();
 		if (config.getProviderPort() == null) {
 			Scanner in = new Scanner(System.in);
-			System.out.println("Please enter your provider port e.g. 80 if you want to share your HTTP server for others to connect to.");
+			System.out.println("Please enter your provider port e.g. 80 if you want to share your HTTP server for others to connect to:");
 			int port = in.nextInt();
 			config.setProviderPort(port);
 			NloveConfigManager.INSTANCE.saveConfig();
 		} else {
-			LOG.info("Provider port: {} (Your share the server listening on this port with others!)", config.getProviderPort());
+			System.out.println(String.format("Provider port: %s (Your share the server listening on this port with others!)", config.getProviderPort()));
 		}
 
 		ProviderCommandHandler pch = new ProviderCommandHandler();

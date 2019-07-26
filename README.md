@@ -3,11 +3,20 @@
 NLove is a filesharing tool using the NKN protocol. It is command line based and simple to use. It works using a reverse proxy (e.g. SFTP server) where you can let others
 connect to.
 
-# Installation
+# Getting started
 
-1) Install Java 
+1) Install Java, for linux users the latest java headless is enough!
 2) Download latest version from https://github.com/zero24x/nlove/releases/latest/download/nlove.jar
-3) In terminal, navigate to download directory and run: `java -Xmx1024m -jar nlove.jar`
+3) In terminal, navigate to download directory and run: `java -Xmx1024m -jar nlove.jar`. (If you have less RAM, change 1024m to something lower)
+
+Or to start in debug mode to see details what is going on: `java -Xmx1024m -jar nlove.jar -debug`
+
+Run on linux as background process:
+
+1) Make sure the tool "screen" is installed (Ubuntu: `apt install screen`)
+2) Run `screen -S nl -d -m java -Xmx1024m -jar nlove.jar &`.
+3) Now you can run `screen -r nl` to bring the software in the foreground, press `Ctl + A + D` to let it run in the background again. `Ctl + C` to stop it.
+
 
 # Community chat
 Feel free to join our community chat on the NKN Dchat (Channel: #nlove, get Dchat here: https://gitlab.com/losnappas/d-chat)
@@ -23,25 +32,17 @@ be returned.
 
 ## Becoming a provider
 
-IMPORTANT: Do not use multi-port servers like FTP, this application supports single-port mode only e.g. SFTP!
+Important provider advices: 
 
-Providers can provide files by putting them in the subfolder "share", so to become a provider put files in this
-folder and restart the program.
+1) For file sharing use better FTPS, SFTP (SSH FTP) is not so fast by default.
+2) Want to get your file sharing server running quickly now? Check out our [provider setup guide](PROVIDER_SETUP_GUIDE.md).
 
-Clients can issue search commands e.g. "search kitty" in the lobby chat room, the providers respond with search results matching
-files in the shared directory and return all file IDs of the matches to the client.
+### Provider commands
 
-Provider setup steps:
-
-1) Put files in the subfolder "share".
-2) Start the sharing server, e.g. SFTP on port 22.
-3) Enter the command `provider enable`, you will be asked for a port of your local service (that other users can connect to). E.g. if you want to share an Webserver on Port 80, enter 80 here.
-4) Done! Now tell others about your service to they start sharing or maybe they find you using the search - the command `search kitty` lists all 
-server having files with this term in their "share" directory.
-
-Note: To change the provider settings e.g. port, edit the file `config/config.json`
+To change your provider settings e.g. service port or username, run the command `provider configure`.
 
 To stop being a provider, run `provider disable`.
 
-# Limitations:
-The network is limited to 1000 participants, we do not want to consume too much bandwidth!
+# Limitations
+This software support single port sharing only, so the provider shares 1 port where others can connect to, multi-port protocol like regular FTP
+will not work. Feel free to use tunnels e.g. OpenVPN or SSH to be able to have multi-port traffic.

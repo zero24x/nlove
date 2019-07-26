@@ -56,7 +56,7 @@ public class ReverseProxyProviderCommandHandler {
 
 		this.providerIdentity = new Identity(ReverseProxyProviderCommandHandler.PROVIDER_IDENTIFIER, wallet);
 		this.nknClient = new NKNClient(this.providerIdentity);
-		LOG.info("Reverse proxy provider handler provider ID:" + this.providerIdentity.getFullIdentifier());
+		System.out.println("Your proxy provider handler provider ID (others can connect to your shared service using this ID):" + this.providerIdentity.getFullIdentifier());
 
 		this.nknClient.setNoAutomaticACKs(true);
 		this.nknClient.onNewMessage(msg -> {
