@@ -39,7 +39,6 @@ public class ReverseProxyClientCommandHandler {
 	private ConcurrentHashMap<String, CommandHandlerPackageFlowManager> packageFlowManagers = new ConcurrentHashMap<String, CommandHandlerPackageFlowManager>();
 	private ConcurrentHashMap<String, Socket> clientConnections = new ConcurrentHashMap<String, Socket>();
 	private ServerSocket reverseProxySocket;
-	private Object unackedPacketsLock = new Object();
 
 	public void start() throws NKNClientException, WalletException, IOException {
 
@@ -111,28 +110,31 @@ public class ReverseProxyClientCommandHandler {
 
 			packageFlowManager.getHoldedIncomingPackets().clear();
 
-			byte[] buffer = new byte[8192];
+			byte[] buffer = new byte[50000];
+			ByteBuffer buf = ByteBuffer.allocateDirect(buffer.length + 100);
+
 			try {
+				while ((bytesRead = clientIn.read(buffer)) > 0) {
 
-				while ((bytesRead = clientIn.read(buffer)) != -1) {
-					byte[] headerBytes = nloveMessageConverter.makeHeaderBytes(false, reverseProxyClientSocket.getPort(), false, packageFlowManager.getAckNum(),
-							packageFlowManager.getSeqNum());
+					int ackNum = packageFlowManager.getAckNum();
+					int seqNum = packageFlowManager.getSeqNum();
 
-					ByteBuffer buf = ByteBuffer.allocate(bytesRead + headerBytes.length);
+					byte[] headerBytes = nloveMessageConverter.makeHeaderBytes(false, reverseProxyClientSocket.getPort(), false, ackNum, seqNum);
+
+					buf.clear();
 					buf.put(headerBytes);
 					buf.put(buffer, 0, bytesRead);
 					buf.flip();
+
 					ByteString data = ByteString.copyFrom(buf);
 
 					nknClient.sendBinaryMessageAsync(destinationFullIdentifier, data);
 					packageFlowManager.getUnackedPackets().put(packageFlowManager.getSeqNum(),
 							new HoldedObject<ReverseProxyReplyPacket>(new ReverseProxyReplyPacket(destinationFullIdentifier, data)));
-					packageFlowManager.addToSeqNum(bytesRead);
-					while (packageFlowManager.getUnackedPackets().size() >= CommandHandlerPackageFlowManager.MAX_UNACKED_PACKETS) {
+					packageFlowManager.setSeqNum(seqNum + bytesRead);
+					if (packageFlowManager.getUnackedPackets().size() >= CommandHandlerPackageFlowManager.MAX_UNACKED_PACKETS) {
 						LOG.debug("Unacked packets too big, pausing");
-						synchronized (unackedPacketsLock) {
-							unackedPacketsLock.wait();
-						}
+						Thread.sleep(100);
 					}
 				}
 				LOG.debug("Read reverse proxy client bytes: -1");
@@ -189,13 +191,7 @@ public class ReverseProxyClientCommandHandler {
 			} else {
 				if (packageFlowManager != null) {
 					int seqNum = decodedMsg.getHeader().getSeqNum();
-					if (packageFlowManager.getUnackedPackets().containsKey(seqNum)) {
-						packageFlowManager.getUnackedPackets().remove(seqNum);
-						synchronized (unackedPacketsLock) {
-							unackedPacketsLock.notify();
-						}
-					}
-
+					packageFlowManager.getUnackedPackets().remove(seqNum);
 				}
 			}
 
