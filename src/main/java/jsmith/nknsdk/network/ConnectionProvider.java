@@ -84,7 +84,7 @@ public class ConnectionProvider {
         }
     }
 
-    public static <T> T attempt(ThrowingLambda<InetSocketAddress, T> action) throws Exception {
+    public static <T> T attempt(ThrowingLambda<InetSocketAddress, T> action, Boolean silent) throws Exception {
         final int retries = maxRetries();
         Exception error = null;
 
@@ -115,8 +115,14 @@ public class ConnectionProvider {
                 return action.apply(new InetSocketAddress(hostname, port));
             } catch (Exception t) {
                 error = t;
-                LOG.warn("Attempt {} failed", i);
-                LOG.debug("Caused by:", t);
+                if (!silent) {
+                    LOG.warn("Attempt {} failed", i);
+                    LOG.debug("Caused by:", t);
+                } else {
+                    LOG.debug("Attempt {} failed", i);
+                    LOG.debug("Caused by:", t);
+                }
+
             }
             nextNodeI++;
             if (nextNodeI >= nodes.length)

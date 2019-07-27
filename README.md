@@ -1,6 +1,4 @@
-# NLove - A new way of meeting people
-
-Nlove - meet new people on the blockchain, have you found your Nlove yet?!
+# NLove - A new way to meet people on the blockchain
 
 NLove is a tool to meet new people using the blockchain on NKN protocol.
 User can join with their profile (e.g. Name: John, Year of birth: 1945, About text: 
@@ -35,3 +33,6 @@ more online to get more matches!
 1) When I run the "roll" command, why do i get timeouts so often until it works? The 
 command will ask a randomly selected subscriber of nlove who may be offline or slow 
 to respond. Just wait until the automatic retry finds a match.
+
+# Credits
+Icons by http://www.famfamfam.com/lab/icons/silk/

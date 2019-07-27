@@ -71,7 +71,7 @@ public class ClientTunnel {
 					throw new NKNClientException("Connection to network refused");
 				}
 				return true;
-			});
+			}, false);
 		} catch (Exception t) {
 			if (t instanceof NKNClientException)
 				throw (NKNClientException) t;
@@ -174,7 +174,7 @@ public class ClientTunnel {
 						}
 
 						return true;
-					});
+					}, false);
 					success[0] = true;
 				} catch (Exception t) {
 					if (t instanceof NKNClientException) {

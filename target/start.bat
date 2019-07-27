@@ -1,2 +1,1 @@
-@echo off
-java -Xmx1024m -jar nlove.jar
+start javaw -Xmx1024m -jar nlove.jar

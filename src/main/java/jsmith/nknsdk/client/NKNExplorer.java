@@ -21,7 +21,7 @@ public class NKNExplorer {
 
 	public static BigDecimal queryBalance(String address) throws WalletException {
 		try {
-			return ConnectionProvider.attempt((bootstrapNode) -> HttpApi.getBalance(bootstrapNode, address));
+			return ConnectionProvider.attempt((bootstrapNode) -> HttpApi.getBalance(bootstrapNode, address), false);
 		} catch (Exception t) {
 			if (t instanceof WalletException)
 				throw (WalletException) t;
@@ -60,7 +60,7 @@ public class NKNExplorer {
 	public static String resolveNamedAddress(String name) throws WalletException {
 		// https://github.com/nknorg/nkn/blob/master/api/common/interfaces.go#L1070
 		try {
-			return ConnectionProvider.attempt((bootstrapNode) -> HttpApi.resolveName(bootstrapNode, name));
+			return ConnectionProvider.attempt((bootstrapNode) -> HttpApi.resolveName(bootstrapNode, name), false);
 		} catch (Exception t) {
 			if (t instanceof WalletException)
 				throw (WalletException) t;
@@ -70,7 +70,7 @@ public class NKNExplorer {
 
 	public static Subscriber[] getSubscribers(String topic, int bucket) throws WalletException {
 		try {
-			return ConnectionProvider.attempt((bootstrapNode) -> HttpApi.getSubscribers(bootstrapNode, topic, bucket));
+			return ConnectionProvider.attempt((bootstrapNode) -> HttpApi.getSubscribers(bootstrapNode, topic, bucket), false);
 		} catch (Exception t) {
 			if (t instanceof WalletException)
 				throw (WalletException) t;
@@ -80,7 +80,7 @@ public class NKNExplorer {
 
 	public static int getFirstAvailableTopicBucket(String topic) throws WalletException {
 		try {
-			return ConnectionProvider.attempt((bootstrapNode) -> HttpApi.getFirstAvailableTopicBucket(bootstrapNode, topic));
+			return ConnectionProvider.attempt((bootstrapNode) -> HttpApi.getFirstAvailableTopicBucket(bootstrapNode, topic), false);
 		} catch (Exception t) {
 			if (t instanceof WalletException)
 				throw (WalletException) t;
@@ -90,7 +90,7 @@ public class NKNExplorer {
 
 	public static int getTopicBucketsCount(String topic) throws WalletException {
 		try {
-			return ConnectionProvider.attempt((bootstrapNode) -> HttpApi.getTopicBucketsCount(bootstrapNode, topic));
+			return ConnectionProvider.attempt((bootstrapNode) -> HttpApi.getTopicBucketsCount(bootstrapNode, topic), false);
 		} catch (Exception t) {
 			if (t instanceof WalletException)
 				throw (WalletException) t;

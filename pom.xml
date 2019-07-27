@@ -169,5 +169,10 @@
 			<artifactId>slf4j-api</artifactId>
 			<version>1.7.26</version>
 		</dependency>
+		<dependency>
+			<groupId>com.github.adedayo.eclipse.sdk</groupId>
+			<artifactId>org.eclipse.swt</artifactId>
+			<version>3.104.0</version>
+		</dependency>
 	</dependencies>
 </project>
