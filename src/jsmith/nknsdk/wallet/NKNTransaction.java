@@ -1,6 +1,9 @@
 package jsmith.nknsdk.wallet;
 
+import java.math.BigDecimal;
+
 import com.google.protobuf.ByteString;
+
 import jsmith.nknsdk.client.NKNExplorer;
 import jsmith.nknsdk.network.ConnectionProvider;
 import jsmith.nknsdk.network.HttpApi;
@@ -9,8 +12,6 @@ import jsmith.nknsdk.wallet.transactions.NameServiceT;
 import jsmith.nknsdk.wallet.transactions.SubscribeT;
 import jsmith.nknsdk.wallet.transactions.TransactionT;
 import jsmith.nknsdk.wallet.transactions.TransferToT;
-
-import java.math.BigDecimal;
 
 /**
  *
@@ -76,8 +77,7 @@ public class NKNTransaction {
 		return subscribe(topic, bucket, duration, clientIdentifier, BigDecimal.ZERO);
 	}
 
-	public String subscribe(String topic, int bucket, int duration, String clientIdentifier, String meta)
-			throws WalletException, NknHttpApiException {
+	public String subscribe(String topic, int bucket, int duration, String clientIdentifier, String meta) throws WalletException, NknHttpApiException {
 		return subscribe(topic, bucket, duration, clientIdentifier, meta, BigDecimal.ZERO);
 	}
 
@@ -85,13 +85,11 @@ public class NKNTransaction {
 		return subscribe(topic, bucket, duration, null, null, fee);
 	}
 
-	public String subscribe(String topic, int bucket, int duration, String clientIdentifier, BigDecimal fee)
-			throws WalletException, NknHttpApiException {
+	public String subscribe(String topic, int bucket, int duration, String clientIdentifier, BigDecimal fee) throws WalletException, NknHttpApiException {
 		return subscribe(topic, bucket, duration, clientIdentifier, null, fee);
 	}
 
-	public String subscribe(String topic, int bucket, int duration, String clientIdentifier, String meta,
-			BigDecimal fee) throws WalletException, NknHttpApiException {
+	public String subscribe(String topic, int bucket, int duration, String clientIdentifier, String meta, BigDecimal fee) throws WalletException, NknHttpApiException {
 		final SubscribeT subscribeT = new SubscribeT();
 
 		subscribeT.setPublicKey(ByteString.copyFrom(w.getPublicKey()));
@@ -103,7 +101,7 @@ public class NKNTransaction {
 
 		try {
 			return submitTransaction(subscribeT, fee);
-		} catch (RuntimeException $e) {
+		} catch (Exception $e) {
 			throw $e;
 		}
 	}

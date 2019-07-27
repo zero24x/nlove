@@ -43,7 +43,7 @@ public class ConnectionProvider {
 
 	private static int maxRetries = 10;
 	private static int rpcCallTimeoutMS = 5000;
-	private static int messageAckTimeoutMS = 5000;
+	private static int messageAckTimeoutMS = 10000;
 
 	public static int maxRetries() {
 		synchronized (lock) {
@@ -109,7 +109,7 @@ public class ConnectionProvider {
 				return action.apply(nodes[nextNodeI]);
 			} catch (Exception t) {
 				if (t instanceof NknHttpApiException) {
-					return null;
+					throw t;
 				}
 
 				error = t;

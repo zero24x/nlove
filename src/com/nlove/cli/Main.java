@@ -21,22 +21,24 @@ import com.nlove.handler.ClientCommandHandler;
 
 import jsmith.nknsdk.client.NKNClientException;
 import jsmith.nknsdk.client.NKNExplorer;
+import jsmith.nknsdk.network.NknHttpApiException;
 import jsmith.nknsdk.wallet.WalletException;
 
 public class Main {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
-	public static void main(String[] args) throws NKNClientException, WalletException, InterruptedException, IOException, ParseException {
+	public static void main(String[] args) throws NKNClientException, WalletException, InterruptedException, IOException, ParseException, NknHttpApiException {
 
 		String version = Main.class.getPackage().getImplementationVersion();
 		if (version != null) {
 			LOG.info("Starting nlove version {}, please wait... ", version);
 		}
 
-		final String helpText = String
+		String helpText = String
 				.format("Welcome to nlove! For discussion and support join #nlove on D-Chat! (See https://gitlab.com/losnappas/d-chat) \r\nType one of this commands: \r\n\r\n"
 						+ "update-profile --> Update your profile\r\n" + "roll --> Find a random user profile\r\n" + "help --> View this command help\r\n", version);
+		helpText += "\r\nIf you are looking for exciting DApps to earn crypto: https://dappstatcentral.ml";
 
 		Options options = new Options();
 		options.addOption("debug", false, "display debug information");
@@ -52,7 +54,7 @@ public class Main {
 		NloveProfile profile = NloveProfileManager.INSTANCE.getProfile();
 
 		LOG.info(String.format("Your username: %s", profile.getUsername()));
-		LOG.info(String.format("Estimated active global nlove instances: %d", NKNExplorer.getSubscribers(ClientCommandHandler.LOBBY_TOPIC, 0).length));
+		LOG.info(String.format("Registered nlove user count: %d", NKNExplorer.getSubscribers(ClientCommandHandler.LOBBY_TOPIC, 0).length));
 
 		ClientCommandHandler cch = new ClientCommandHandler();
 		cch.start();
