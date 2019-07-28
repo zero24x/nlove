@@ -11,8 +11,7 @@ It is command line based and simple to use.
 
 1) Install Java!
 
-2) Download latest version [here](https://github.com/zero24x/nlove/releases/latest/download/nlove.zip) 
-, extract all ZIP contents in a folder.
+2) Download latest version [here](https://github.com/zero24x/nlove/releases/latest/download/nlove.zip), extract all ZIP contents in a folder.
 
 3) Start the launcher (Windows: launch.bat, Linux & Mac: launch.sh) Follow the instructions shown in the terminal 
  window.
