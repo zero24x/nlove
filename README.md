@@ -7,7 +7,7 @@ other users!
 
 It is command line based and simple to use.
 
-# Starting nlove
+# Installation guide
 
 1) Install Java!
 
