@@ -67,6 +67,10 @@ public class ClientCommandHandler {
         this.resubscribeChecker();
     }
 
+    public void stop() {
+        this.client.close();
+    }
+
     public void subscribe() throws WalletException, NknHttpApiException {
         try {
             LOG.info("Subscribing to topic " + LOBBY_TOPIC);

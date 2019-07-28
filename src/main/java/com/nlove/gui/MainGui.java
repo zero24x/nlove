@@ -10,6 +10,8 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -25,9 +27,11 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
@@ -59,7 +63,6 @@ public class MainGui {
     private JFrame frmNloveA;
     private JTextField textFieldUsername;
     private JTextField textFieldYearOfBirth;
-    private static JTextArea textAreaStatus;
 
     NloveProfileManager profileManager = NloveProfileManager.INSTANCE;
     private JButton btnRoll;
@@ -68,6 +71,10 @@ public class MainGui {
     private JTabbedPane tabbedPaneMain;
 
     private ClientCommandHandler cch;
+
+    private Thread clientCommandHandlerThread;
+    private Thread rollThread;
+    private static JTextArea textAreaStatus;
 
     /**
      * Launch the application.
@@ -99,26 +106,16 @@ public class MainGui {
     }
 
     private void initializeGui() throws WalletException, NKNClientException, NknHttpApiException {
-
-        if (this.profileManager.profileIsEmpty()) {
-            JOptionPane.showMessageDialog(this.frmNloveA, "To use nlove, please create a profile first and press \"Save\"!");
-            this.tabbedPaneMain.setSelectedIndex(1);
-            return;
-        }
-        LOG.info("Loading, please wait...");
-        loadProfile();
-
         String version = MainGui.class.getPackage().getImplementationVersion();
         if (version != null) {
             LOG.info("Nlove version: {}", version);
         }
 
-        cch = new ClientCommandHandler();
-        cch.start();
+        if (this.profileManager.profileIsEmpty()) {
+            JOptionPane.showMessageDialog(this.frmNloveA, "To use nlove, please create a profile first and press \"Save\"!");
+            this.tabbedPaneMain.setSelectedIndex(1);
+        }
         setState();
-        int subCnt = NKNExplorer.getSubscribers(ClientCommandHandler.LOBBY_TOPIC, 0).length;
-        String userCnt = subCnt < 500 ? String.valueOf(subCnt) : String.valueOf(subCnt) + "+";
-        LOG.info(String.format("Registered nlove user count: %s", userCnt));
     }
 
     private static void start(String[] args) throws ParseException {
@@ -132,7 +129,7 @@ public class MainGui {
         LogUtils.setupLogging(isDebug ? TPLogger.DEBUG : TPLogger.INFO, textAreaStatus);
     }
 
-    private void saveProfile() {
+    private void saveProfile() throws WalletException, NKNClientException, NknHttpApiException {
 
         try {
             String username = textFieldUsername.getText();
@@ -174,8 +171,41 @@ public class MainGui {
         this.setState();
     }
 
-    private void setState() {
-        this.getBtnRoll().setEnabled(!this.profileManager.profileIsEmpty());
+    private void setState() throws WalletException, NKNClientException, NknHttpApiException {
+        boolean profileEmpty = this.profileManager.profileIsEmpty();
+        this.getBtnRoll().setEnabled(!profileEmpty);
+        if (profileEmpty) {
+            return;
+        }
+
+        LOG.info("Loading, please wait...");
+        loadProfile();
+
+        if (this.cch == null) {
+            clientCommandHandlerThread = new Thread(new Runnable() {
+                public void run() {
+                    Thread.currentThread().setName("ClientCommandHandler");
+                    cch = new ClientCommandHandler();
+                    try {
+                        frmNloveA.setCursor(new Cursor(Cursor.WAIT_CURSOR));
+                        btnRoll.setEnabled(false);
+                        cch.start();
+                        int subCnt = NKNExplorer.getSubscribers(ClientCommandHandler.LOBBY_TOPIC, 0).length;
+                        String userCnt = subCnt < 500 ? String.valueOf(subCnt) : String.valueOf(subCnt) + "+";
+                        LOG.info(String.format("Registered nlove user count: %s", userCnt));
+                        frmNloveA.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                        btnRoll.setEnabled(true);
+                    } catch (WalletException | NKNClientException | NknHttpApiException e1) {
+                        // TODO Auto-generated catch block
+                        e1.printStackTrace();
+                    }
+
+                }
+            });
+            clientCommandHandlerThread.start();
+
+        }
+
     }
 
     /**
@@ -186,18 +216,19 @@ public class MainGui {
         frmNloveA.addWindowListener(new WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent e) {
-                (new Thread(new Runnable() {
-                    public void run() {
-                        Thread.currentThread().setName("initializeGui");
-                        try {
-                            initializeGui();
-                        } catch (WalletException | NKNClientException | NknHttpApiException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        }
-                    }
-                })).start();
+                try {
+                    initializeGui();
+                } catch (WalletException | NKNClientException | NknHttpApiException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
 
+            }
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+                clientCommandHandlerThread.interrupt();
+                rollThread.interrupt();
             }
         });
         frmNloveA.setIconImage(Toolkit.getDefaultToolkit().getImage(MainGui.class.getResource("/resources/logo.png")));
@@ -217,15 +248,28 @@ public class MainGui {
         roll.setLayout(null);
 
         btnRoll = new JButton("Roll");
+        btnRoll.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            }
+        });
         btnRoll.addMouseListener(new MouseAdapter() {
+
             @Override
             public void mouseClicked(MouseEvent e) {
-                try {
-                    cch.roll();
-                } catch (WalletException | InterruptedException e1) {
-                    // TODO Auto-generated catch block
-                    e1.printStackTrace();
-                }
+                rollThread = new Thread(new Runnable() {
+                    public void run() {
+                        try {
+                            btnRoll.setEnabled(false);
+                            cch.roll();
+                        } catch (WalletException | InterruptedException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        } finally {
+                            btnRoll.setEnabled(true);
+                        }
+                    }
+                });
+                rollThread.start();
             }
         });
         btnRoll.setEnabled(false);
@@ -367,7 +411,12 @@ public class MainGui {
         btnSave.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                saveProfile();
+                try {
+                    saveProfile();
+                } catch (WalletException | NKNClientException | NknHttpApiException e1) {
+                    // TODO Auto-generated catch block
+                    e1.printStackTrace();
+                }
             }
         });
         btnSave.setIcon(new ImageIcon(MainGui.class.getResource("/resources/save.png")));
@@ -378,12 +427,15 @@ public class MainGui {
         gbc_btnSave.gridy = 5;
         profile.add(btnSave, gbc_btnSave);
 
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setBounds(3, 196, 345, 133);
+        frmNloveA.getContentPane().add(scrollPane);
+
         textAreaStatus = new JTextArea();
         textAreaStatus.setLineWrap(true);
-        textAreaStatus.setFont(new Font("Tahoma", Font.PLAIN, 10));
-        textAreaStatus.setBounds(3, 196, 345, 133);
-        textAreaStatus.setRows(8);
-        frmNloveA.getContentPane().add(textAreaStatus);
+        textAreaStatus.setFont(new Font("Tahoma", Font.PLAIN, 11));
+        scrollPane.setViewportView(textAreaStatus);
     }
 
     private void loadProfile() {
@@ -392,10 +444,6 @@ public class MainGui {
         textFieldYearOfBirth.setText(String.valueOf(profile.getYearOfBirth()));
         choiceGender.select(profile.getGender().toString());
         textAreaAboutYou.setText(profile.getAbout());
-    }
-
-    public JTextArea getTextAreaStatus() {
-        return textAreaStatus;
     }
 
     public JButton getBtnRoll() {
@@ -420,5 +468,9 @@ public class MainGui {
 
     public JTabbedPane getTabbedPaneMain() {
         return tabbedPaneMain;
+    }
+
+    public JTextArea getTextAreaStatus() {
+        return textAreaStatus;
     }
 }

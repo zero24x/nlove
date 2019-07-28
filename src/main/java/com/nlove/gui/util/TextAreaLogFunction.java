@@ -29,7 +29,7 @@ public class TextAreaLogFunction extends SimpleLogFunction {
             log_lastStream = out;
         }
 
-        if (this.textArea.getLineCount() >= 20) {
+        if (this.textArea.getLineCount() >= 2) {
             int end;
             try {
                 end = textArea.getLineEndOffset(0);

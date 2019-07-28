@@ -17,6 +17,7 @@ public class NloveProfileManager {
     private static final Logger LOG = LoggerFactory.getLogger(NloveProfileManager.class);
 
     private ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+    private final File dataDir = Paths.get(System.getProperty("user.dir"), "data").toFile();
     private final File profileFile = Paths.get(System.getProperty("user.dir"), "data", File.separator.toString(), "profile.json").toFile();
     public static NloveProfileManager INSTANCE = new NloveProfileManager();
 
@@ -24,7 +25,9 @@ public class NloveProfileManager {
 
     public NloveProfileManager() {
         try {
-            this.profile = mapper.readValue(profileFile, NloveProfile.class);
+            if (this.profileFile.exists()) {
+                this.profile = mapper.readValue(profileFile, NloveProfile.class);
+            }
         } catch (JsonParseException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -52,6 +55,9 @@ public class NloveProfileManager {
 
     public synchronized void saveProfile() {
         try {
+            if (!dataDir.exists()) {
+                dataDir.mkdir();
+            }
             mapper.writerWithDefaultPrettyPrinter().writeValue(profileFile, this.profile);
         } catch (IOException e) {
             // TODO Auto-generated catch block
