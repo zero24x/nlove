@@ -1,4 +1,5 @@
 # NLove - A new way to meet people on the blockchain
+Supported operating systems: Windows, Mac, Linux
 
 ![logo](src/main/java/resources/logo.png)
 
@@ -13,8 +14,7 @@ other users!
 
 2) Download latest version [here](https://github.com/zero24x/nlove/releases/latest/download/nlove.zip), extract all ZIP contents in a folder.
 
-3) Start the launcher (Windows: launch.bat, Linux & Mac: launch.sh) Follow the instructions shown in the terminal 
- window.
+3) Start the launcher (Windows: launch.bat, Linux & Mac: launch.sh).
 
 # Our community chat
 
