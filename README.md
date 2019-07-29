@@ -1,5 +1,7 @@
 # NLove - A new way to meet people on the blockchain
 
+![logo][src/main/java/resources/logo.png]
+
 NLove is a tool to meet new people using the blockchain on NKN protocol.
 User can join with their profile (e.g. Name: John, Year of birth: 1945, About text: 
 I like trains) into a user pool and can issue a command to randomly contact one of the 
