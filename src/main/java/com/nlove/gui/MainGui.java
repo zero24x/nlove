@@ -127,6 +127,8 @@ public class MainGui {
 
         Boolean isDebug = cmd.hasOption("debug") || java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
         LogUtils.setupLogging(isDebug ? TPLogger.DEBUG : TPLogger.INFO, textAreaStatus);
+
+        LOG.info("Loading, please wait...");
     }
 
     private void saveProfile() throws WalletException, NKNClientException, NknHttpApiException {
@@ -177,8 +179,6 @@ public class MainGui {
         if (profileEmpty) {
             return;
         }
-
-        LOG.info("Loading, please wait...");
         loadProfile();
 
         if (this.cch == null) {
@@ -412,6 +412,10 @@ public class MainGui {
         profile.add(textAreaAboutYou, gbc_textAreaAboutYou);
 
         JButton btnSave = new JButton("Save");
+        btnSave.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            }
+        });
         btnSave.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {

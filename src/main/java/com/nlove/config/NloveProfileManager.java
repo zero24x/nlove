@@ -63,6 +63,7 @@ public class NloveProfileManager {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        LOG.info("Profile saved!");
         return;
     }
 
