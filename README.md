@@ -1,4 +1,7 @@
 # NLove - A new way to meet people on the blockchain
+Supported operating systems: Windows, Mac, Linux
+
+![logo](src/main/java/resources/logo.png)
 
 NLove is a tool to meet new people using the blockchain on NKN protocol.
 User can join with their profile (e.g. Name: John, Year of birth: 1945, About text: 
@@ -11,8 +14,7 @@ other users!
 
 2) Download latest version [here](https://github.com/zero24x/nlove/releases/latest/download/nlove.zip), extract all ZIP contents in a folder.
 
-3) Start the launcher (Windows: launch.bat, Linux & Mac: launch.sh) Follow the instructions shown in the terminal 
- window.
+3) Start the launcher (Windows: launch.bat, Linux & Mac: launch.sh).
 
 # Our community chat
 
