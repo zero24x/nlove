@@ -16,7 +16,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>nlove</groupId>
 	<artifactId>nlove</artifactId>
-	<version>0.0.3</version>
+	<version>0.0.4</version>
 	<name>nlove</name>
 	<build>
 		<defaultGoal>package</defaultGoal>
