@@ -158,11 +158,10 @@ public class ClientCommandHandler {
                     final CompletableFuture<NKNClient.ReceivedMessage> promise = this.client.sendTextMessageAsync(rndSub.fullClientIdentifier, msgString);
 
                     ReceivedMessage response = promise.join();
-                    String channel = String.format("#%s%s", response.from, this.identity.getFullIdentifier());
 
                     NloveRequestUserProfileReplyMessage replyMsg = (NloveRequestUserProfileReplyMessage) this.nloveMessageConverter.parseMsg(response);
 
-                    ShowMatchDialog dialog = new ShowMatchDialog(replyMsg.getProfile());
+                    ShowMatchDialog dialog = new ShowMatchDialog(replyMsg.getProfile(), null, true);
                     dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
                     dialog.setVisible(true);
 

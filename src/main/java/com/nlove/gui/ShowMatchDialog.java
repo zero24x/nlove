@@ -3,6 +3,7 @@ package com.nlove.gui;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -30,8 +31,13 @@ public class ShowMatchDialog extends JDialog {
 
     /**
      * Create the dialog.
+     * 
+     * @param owner
+     * @param modal
      */
-    public ShowMatchDialog(NloveProfile profile) {
+    public ShowMatchDialog(NloveProfile profile, Frame owner, boolean modal) {
+        super(owner, modal);
+
         setTitle("nlove");
         setIconImage(Toolkit.getDefaultToolkit().getImage(ShowMatchDialog.class.getResource("/resources/logo.png")));
         setBounds(100, 100, 450, 300);
