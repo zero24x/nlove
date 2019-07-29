@@ -122,29 +122,6 @@ public class MainGui {
             this.tabbedPaneMain.setSelectedIndex(1);
         }
         setState();
-        if (this.cch == null) {
-            clientCommandHandlerThread = new Thread(new Runnable() {
-                public void run() {
-                    Thread.currentThread().setName("ClientCommandHandler");
-                    cch = new ClientCommandHandler();
-                    try {
-                        frmNloveA.setCursor(new Cursor(Cursor.WAIT_CURSOR));
-                        btnRoll.setEnabled(false);
-                        cch.start();
-                        refreshUserCnt();
-                        frmNloveA.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-                        btnRoll.setEnabled(true);
-                    } catch (WalletException | NKNClientException | NknHttpApiException e1) {
-                        // TODO Auto-generated catch block
-                        e1.printStackTrace();
-                    }
-
-                }
-
-            });
-            clientCommandHandlerThread.start();
-        }
-
         Runnable periodicTask = new Runnable() {
             public void run() {
                 refreshUserCnt();
@@ -215,6 +192,30 @@ public class MainGui {
             return;
         }
         loadProfile();
+
+        if (this.cch == null) {
+            clientCommandHandlerThread = new Thread(new Runnable() {
+                public void run() {
+                    Thread.currentThread().setName("ClientCommandHandler");
+                    cch = new ClientCommandHandler();
+                    try {
+                        frmNloveA.setCursor(new Cursor(Cursor.WAIT_CURSOR));
+                        btnRoll.setEnabled(false);
+                        cch.start();
+                        refreshUserCnt();
+                        frmNloveA.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                        btnRoll.setEnabled(true);
+                    } catch (WalletException | NKNClientException | NknHttpApiException e1) {
+                        // TODO Auto-generated catch block
+                        e1.printStackTrace();
+                    }
+
+                }
+
+            });
+            clientCommandHandlerThread.start();
+        }
+
     }
 
     private void refreshUserCnt() {
