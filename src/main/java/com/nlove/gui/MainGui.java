@@ -20,6 +20,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -59,6 +62,7 @@ import jsmith.nknsdk.wallet.WalletException;
 public class MainGui {
 
     private static final Logger LOG = LoggerFactory.getLogger(MainGui.class);
+    ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
     private JFrame frmNloveA;
     private JTextField textFieldUsername;
@@ -74,7 +78,9 @@ public class MainGui {
 
     private Thread clientCommandHandlerThread;
     private Thread rollThread;
+    private Thread userCountUpdateThread;
     private static JTextArea textAreaStatus;
+    private JLabel lblUserCnt;
 
     /**
      * Launch the application.
@@ -116,6 +122,35 @@ public class MainGui {
             this.tabbedPaneMain.setSelectedIndex(1);
         }
         setState();
+        if (this.cch == null) {
+            clientCommandHandlerThread = new Thread(new Runnable() {
+                public void run() {
+                    Thread.currentThread().setName("ClientCommandHandler");
+                    cch = new ClientCommandHandler();
+                    try {
+                        frmNloveA.setCursor(new Cursor(Cursor.WAIT_CURSOR));
+                        btnRoll.setEnabled(false);
+                        cch.start();
+                        refreshUserCnt();
+                        frmNloveA.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+                        btnRoll.setEnabled(true);
+                    } catch (WalletException | NKNClientException | NknHttpApiException e1) {
+                        // TODO Auto-generated catch block
+                        e1.printStackTrace();
+                    }
+
+                }
+
+            });
+            clientCommandHandlerThread.start();
+        }
+
+        Runnable periodicTask = new Runnable() {
+            public void run() {
+                refreshUserCnt();
+            }
+        };
+        executor.scheduleAtFixedRate(periodicTask, 0, 1, TimeUnit.MINUTES);
     }
 
     private static void start(String[] args) throws ParseException {
@@ -180,32 +215,19 @@ public class MainGui {
             return;
         }
         loadProfile();
+    }
 
-        if (this.cch == null) {
-            clientCommandHandlerThread = new Thread(new Runnable() {
-                public void run() {
-                    Thread.currentThread().setName("ClientCommandHandler");
-                    cch = new ClientCommandHandler();
-                    try {
-                        frmNloveA.setCursor(new Cursor(Cursor.WAIT_CURSOR));
-                        btnRoll.setEnabled(false);
-                        cch.start();
-                        int subCnt = NKNExplorer.getSubscribers(ClientCommandHandler.LOBBY_TOPIC, 0).length;
-                        String userCnt = subCnt < 500 ? String.valueOf(subCnt) : String.valueOf(subCnt) + "+";
-                        LOG.info(String.format("Registered nlove user count: %s", userCnt));
-                        frmNloveA.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-                        btnRoll.setEnabled(true);
-                    } catch (WalletException | NKNClientException | NknHttpApiException e1) {
-                        // TODO Auto-generated catch block
-                        e1.printStackTrace();
-                    }
-
-                }
-            });
-            clientCommandHandlerThread.start();
-
+    private void refreshUserCnt() {
+        int subCnt;
+        try {
+            subCnt = NKNExplorer.getSubscribers(ClientCommandHandler.LOBBY_TOPIC, 0).length;
+            String userCnt = subCnt < 500 ? String.valueOf(subCnt) : String.valueOf(subCnt) + "+";
+            lblUserCnt.setText(userCnt);
+            LOG.info(String.format("Updated estimated user count to: %s", userCnt));
+        } catch (WalletException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         }
-
     }
 
     /**
@@ -227,11 +249,15 @@ public class MainGui {
 
             @Override
             public void windowClosing(WindowEvent e) {
+                executor.shutdown();
                 if (clientCommandHandlerThread != null) {
                     clientCommandHandlerThread.interrupt();
                 }
                 if (rollThread != null) {
                     rollThread.interrupt();
+                }
+                if (userCountUpdateThread != null) {
+                    userCountUpdateThread.interrupt();
                 }
             }
         });
@@ -291,7 +317,7 @@ public class MainGui {
         lblReadyToMeet.setIconTextGap(0);
         lblReadyToMeet.setAlignmentX(1.0f);
         lblReadyToMeet.setVerticalAlignment(SwingConstants.TOP);
-        lblReadyToMeet.setBounds(2, 34, 196, 23);
+        lblReadyToMeet.setBounds(2, 47, 196, 23);
         roll.add(lblReadyToMeet);
 
         JLabel lblNewLabel_1 = new JLabel("");
@@ -300,10 +326,11 @@ public class MainGui {
         roll.add(lblNewLabel_1);
 
         JLabel lblWeWill = new JLabel("* you will be randomly matched");
+        lblWeWill.setFont(new Font("Tahoma", Font.ITALIC, 11));
         lblWeWill.setVerticalAlignment(SwingConstants.TOP);
         lblWeWill.setIconTextGap(0);
         lblWeWill.setAlignmentX(1.0f);
-        lblWeWill.setBounds(2, 68, 196, 23);
+        lblWeWill.setBounds(2, 134, 196, 14);
         roll.add(lblWeWill);
 
         JLabel lblSponsoredByDappstatcentralml = new JLabel("<html><a href=''>Sponsored by DappStatCentral.ml</a></html>");
@@ -328,6 +355,18 @@ public class MainGui {
         lblSponsoredByDappstatcentralml.setForeground(new Color(0, 0, 255));
         lblSponsoredByDappstatcentralml.setBounds(2, 148, 174, 14);
         roll.add(lblSponsoredByDappstatcentralml);
+
+        JLabel lblEstimatedSubscriberCount = new JLabel("Estimated online users:");
+        lblEstimatedSubscriberCount.setFont(new Font("Tahoma", Font.PLAIN, 13));
+        lblEstimatedSubscriberCount.setAlignmentX(1.0f);
+        lblEstimatedSubscriberCount.setBounds(2, 22, 135, 23);
+        roll.add(lblEstimatedSubscriberCount);
+
+        lblUserCnt = new JLabel("UNKNOWN");
+        lblUserCnt.setFont(new Font("Tahoma", Font.PLAIN, 13));
+        lblUserCnt.setAlignmentX(1.0f);
+        lblUserCnt.setBounds(140, 22, 128, 23);
+        roll.add(lblUserCnt);
 
         JPanel profile = new JPanel();
         profile.setBorder(new EmptyBorder(2, 2, 2, 2));
@@ -480,5 +519,9 @@ public class MainGui {
 
     public JTextArea getTextAreaStatus() {
         return textAreaStatus;
+    }
+
+    public JLabel getLblUserCnt() {
+        return lblUserCnt;
     }
 }

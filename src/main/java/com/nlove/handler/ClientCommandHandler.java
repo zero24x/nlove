@@ -1,7 +1,6 @@
 package com.nlove.handler;
 
 import java.io.File;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,11 +37,9 @@ public class ClientCommandHandler {
     private Identity identity;
     private Wallet wallet;
     private static Integer previousHeight = 0;
-    private static Duration subscribeDuration = Duration.ofHours(24);
     public static String LOBBY_TOPIC = "nlove-lobby5";
     private NloveMessageConverter nloveMessageConverter = new NloveMessageConverter("CLIENT");
     private Random rnd = new Random();
-
     private static final Logger LOG = LoggerFactory.getLogger(ClientCommandHandler.class);
 
     public void start() throws WalletException, NKNClientException, NknHttpApiException {
