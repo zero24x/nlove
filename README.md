@@ -10,7 +10,7 @@ other users!
 
 # Installation guide
 
-1) Install Java!
+1) Install Java from [here](https://www.java.com/download)!
 
 2) Download latest version [here](https://github.com/zero24x/nlove/releases/latest/download/nlove.zip), extract all ZIP contents in a folder.
 
