@@ -5,8 +5,6 @@ User can join with their profile (e.g. Name: John, Year of birth: 1945, About te
 I like trains) into a user pool and can issue a command to randomly contact one of the 
 other users!
 
-It is command line based and simple to use.
-
 # Installation guide
 
 1) Install Java!
@@ -18,8 +16,7 @@ It is command line based and simple to use.
 
 # Our community chat
 
-Come and join our community chat on [D-Chat](https://gitlab.com/losnappas/d-chat), channel 
-`#nlove` for support and advices!
+Come and join our community chat channel #nlove on the [NKN Discord](https://discord.gg/8Yawr6z).
 
 # Notes
 

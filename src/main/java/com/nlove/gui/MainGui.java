@@ -227,8 +227,12 @@ public class MainGui {
 
             @Override
             public void windowClosing(WindowEvent e) {
-                clientCommandHandlerThread.interrupt();
-                rollThread.interrupt();
+                if (clientCommandHandlerThread != null) {
+                    clientCommandHandlerThread.interrupt();
+                }
+                if (rollThread != null) {
+                    rollThread.interrupt();
+                }
             }
         });
         frmNloveA.setIconImage(Toolkit.getDefaultToolkit().getImage(MainGui.class.getResource("/resources/logo.png")));
@@ -292,7 +296,7 @@ public class MainGui {
 
         JLabel lblNewLabel_1 = new JLabel("");
         lblNewLabel_1.setIcon(new ImageIcon(MainGui.class.getResource("/resources/logo.png")));
-        lblNewLabel_1.setBounds(208, 11, 128, 112);
+        lblNewLabel_1.setBounds(208, 8, 128, 112);
         roll.add(lblNewLabel_1);
 
         JLabel lblWeWill = new JLabel("* you will be randomly matched");
