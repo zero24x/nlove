@@ -12,6 +12,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Collectors;
 
 import javax.swing.JTextArea;
 
@@ -147,6 +148,9 @@ public class HangoutCommandHandler {
 
     private void displayMessages() {
         List<Transaction> txes = iotaApi.findTransactionObjectsByAddresses(new String[] { NLOVE_HANGOUT_ADDRESS });
+
+        txes = txes.stream().sorted((t1, t2) -> Long.compare(t1.getTimestamp(), t2.getTimestamp())).collect(Collectors.toList());
+
         StringBuilder resString = new StringBuilder();
 
         if (txes.isEmpty()) {
@@ -157,6 +161,7 @@ public class HangoutCommandHandler {
             if (!transaction.getTag().equals(NLOVE_HANGOUT_TAG)) {
                 continue;
             }
+
             String txLine = getTxLine(transaction);
             if (txLine == null) {
                 continue;
@@ -250,7 +255,7 @@ public class HangoutCommandHandler {
             String from = String.format("%s.%s", signedMsg.getUsername(), sbFrom.toString());
 
             try {
-                Boolean verified = RsaUtil.verify(signedMsg.getSigningString(), signedMsg.getMsg(), RsaUtil.publicKeyFromBytes(signedMsg.getPublicKeyBytes()));
+                Boolean verified = RsaUtil.verify(signedMsg.getSigningString(), signedMsg.getSignature(), RsaUtil.publicKeyFromBytes(signedMsg.getPublicKeyBytes()));
                 if (!verified) {
                     return null;
                 }
@@ -258,12 +263,15 @@ public class HangoutCommandHandler {
             } catch (NoSuchAlgorithmException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
+                return null;
             } catch (InvalidKeySpecException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
+                return null;
             } catch (Exception e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
+                return null;
             }
 
             return String.format("[%s] %s%s%s", date, from, System.getProperty("line.separator"), signedMsg.getMsg());
