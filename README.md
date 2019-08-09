@@ -34,7 +34,7 @@ more online to get more matches!
 
 1) When I run the "roll" command, why do i get timeouts so often until it works? The 
 command will ask a randomly selected subscriber of nlove who may be offline or slow 
-to respond. Just wait until the automatic retry finds a match.
-
+to respond. Just wait until the automatic retry finds a match. The pub/sub subcription 
+length is for ~ 10min worth of blocks - delays joins/leaves but less network/node load.
 # Credits
 Icons by http://www.famfamfam.com/lab/icons/silk/

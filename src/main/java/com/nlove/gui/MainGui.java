@@ -9,7 +9,6 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -274,7 +273,7 @@ public class MainGui {
                 }
             }
         });
-        frmNloveA.setIconImage(Toolkit.getDefaultToolkit().getImage(MainGui.class.getResource("/resources/logo.png")));
+        // frmNloveA.setIconImage(Toolkit.getDefaultToolkit().getImage(MainGui.class.getResource("/src/main/resources/logo.png")));
         frmNloveA.setResizable(false);
         frmNloveA.setTitle("Nlove");
         frmNloveA.setBounds(100, 100, 369, 371);
@@ -316,7 +315,7 @@ public class MainGui {
             }
         });
         btnRoll.setEnabled(false);
-        btnRoll.setIcon(new ImageIcon(MainGui.class.getResource("/resources/random.png")));
+        btnRoll.setIcon(new ImageIcon(MainGui.class.getResource("/main/resources/random.png")));
         btnRoll.setBounds(2, 97, 71, 23);
         panelRoll.add(btnRoll);
 
@@ -334,7 +333,7 @@ public class MainGui {
         panelRoll.add(lblReadyToMeet);
 
         JLabel lblNewLabel_1 = new JLabel("");
-        lblNewLabel_1.setIcon(new ImageIcon(MainGui.class.getResource("/resources/logo.png")));
+        lblNewLabel_1.setIcon(new ImageIcon(MainGui.class.getResource("/main/resources/logo.png")));
         lblNewLabel_1.setBounds(208, 8, 128, 112);
         panelRoll.add(lblNewLabel_1);
 
@@ -479,7 +478,7 @@ public class MainGui {
                 }
             }
         });
-        btnSave.setIcon(new ImageIcon(MainGui.class.getResource("/resources/save.png")));
+        btnSave.setIcon(new ImageIcon(MainGui.class.getResource("/main/resources/save.png")));
         GridBagConstraints gbc_btnSave = new GridBagConstraints();
         gbc_btnSave.anchor = GridBagConstraints.WEST;
         gbc_btnSave.insets = new Insets(0, 0, 0, 5);
@@ -508,7 +507,7 @@ public class MainGui {
             public void actionPerformed(ActionEvent e) {
             }
         });
-        btnOpenHangout.setIcon(new ImageIcon(MainGui.class.getResource("/resources/arrow-right.png")));
+        btnOpenHangout.setIcon(new ImageIcon(MainGui.class.getResource("/main/resources/arrow-right.png")));
         btnOpenHangout.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {

@@ -62,7 +62,7 @@ public class HangoutDialog extends JDialog {
         setResizable(false);
 
         setTitle("nlove");
-        setIconImage(Toolkit.getDefaultToolkit().getImage(HangoutDialog.class.getResource("/resources/logo.png")));
+        setIconImage(Toolkit.getDefaultToolkit().getImage(HangoutDialog.class.getResource("/main/resources/logo.png")));
         setBounds(100, 100, 592, 501);
         getContentPane().setLayout(new BorderLayout());
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -107,7 +107,7 @@ public class HangoutDialog extends JDialog {
             }
         });
         btnSend.setBounds(2, 82, 77, 22);
-        btnSend.setIcon(new ImageIcon(HangoutDialog.class.getResource("/resources/envelope.png")));
+        btnSend.setIcon(new ImageIcon(HangoutDialog.class.getResource("/main/resources/envelope.png")));
         btnSend.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -164,7 +164,7 @@ public class HangoutDialog extends JDialog {
             getContentPane().add(buttonPane, BorderLayout.SOUTH);
             {
                 JButton okButton = new JButton("Close");
-                okButton.setIcon(new ImageIcon(HangoutDialog.class.getResource("/resources/times.png")));
+                okButton.setIcon(new ImageIcon(HangoutDialog.class.getResource("/main/resources/times.png")));
                 okButton.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
                     }
