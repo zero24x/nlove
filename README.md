@@ -7,7 +7,7 @@ NLove is a tool to meet new people using the blockchain on NKN + IOTa protocol.
 Users join with their profile (e.g. Name: John, Year of birth: 1945, About text: 
 i like coins) into a user pool and will be presented randomly other profiles. Alternatively the can join the hangout zone:
 
-## Hangout zones
+## Hangout zone
 The "Hangout zone" is a public chat, everyone can write there, the messages are stored 
 on the IOTA blockchain - IOTA rovides fast & free data transactions to send our chat messages.
 If neede you can move e.g. to DM in D-Chat.
