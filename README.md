@@ -5,10 +5,7 @@ Supported operating systems: Windows, Mac, Linux
 
 NLove is a tool to meet new people using the blockchain on NKN + IOTa protocol.
 Users join with their profile (e.g. Name: John, Year of birth: 1945, About text: 
-I like trains) into a user pool and can issue a command to randomly contact one of the 
-other users!
-
-Alternatively the can join the hangout zone:
+i like coins) into a user pool and will be presented randomly other profiles. Alternatively the can join the hangout zone:
 
 ## Hangout zones
 The "Hangout zone" is a public chat, everyone can write there, the messages are stored 
