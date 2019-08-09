@@ -5,6 +5,8 @@
 		<java.source-target.version>1.8</java.source-target.version>
 		<jar-class-loader.version>1.0</jar-class-loader.version>
 		<one-jar-main-class>com.nlove.launcher.NloveLauncher</one-jar-main-class>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
 
 	<repositories>
@@ -16,12 +18,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>nlove</groupId>
 	<artifactId>nlove</artifactId>
-	<version>0.0.5</version>
+	<version>0.1.0</version>
 	<name>nlove</name>
 	<build>
 		<defaultGoal>package</defaultGoal>
 		<finalName>${project.artifactId}</finalName>
-		<sourceDirectory>src</sourceDirectory>
+		<sourceDirectory>src/main/java</sourceDirectory>
 		<resources>
 			<resource>
 				<directory>src</directory>
@@ -31,7 +33,6 @@
 			</resource>
 		</resources>
 		<plugins>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -165,14 +166,44 @@
 			<version>1.15</version>
 		</dependency>
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.7.26</version>
-		</dependency>
-		<dependency>
 			<groupId>com.github.adedayo.eclipse.sdk</groupId>
 			<artifactId>org.eclipse.swt</artifactId>
 			<version>3.104.0</version>
 		</dependency>
+		<dependency>
+			<groupId>com.github.iotaledger.iota-java</groupId>
+			<artifactId>jota</artifactId>
+			<version>1.0.0-beta6</version>
+		</dependency>
+		<!-- Wrapper for tools.jar import in both 1.8 and 1.9+ java -->
+		<dependency>
+			<groupId>com.github.olivergondza</groupId>
+			<artifactId>maven-jdk-tools-wrapper</artifactId>
+			<version>0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.zeromq</groupId>
+			<artifactId>jeromq</artifactId>
+			<version>0.5.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.msgpack</groupId>
+			<artifactId>jackson-dataformat-msgpack</artifactId>
+			<version>0.8.17</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.26</version>
+		</dependency>
 	</dependencies>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.github.iotaledger</groupId>
+				<artifactId>java-md-doclet</artifactId>
+				<version>2.1.3</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 </project>

@@ -3,6 +3,7 @@ package com.nlove.gui.util;
 import java.io.PrintStream;
 
 import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 import javax.swing.text.BadLocationException;
 
 import com.darkyen.tproll.TPLogger;
@@ -29,19 +30,27 @@ public class TextAreaLogFunction extends SimpleLogFunction {
             log_lastStream = out;
         }
 
-        if (this.textArea.getLineCount() >= 20) {
-            int end;
-            try {
-                end = textArea.getLineEndOffset(0);
-                textArea.replaceRange("", 0, end);
-            } catch (BadLocationException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+        String logTxt = new String(formattedContent.toString());
+
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+
+                if (textArea.getLineCount() >= 20) {
+                    int end;
+                    try {
+                        end = textArea.getLineEndOffset(0);
+                        textArea.replaceRange("", 0, end);
+                    } catch (BadLocationException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+
+                }
+
+                textArea.append(logTxt + "\r\n");
+                textArea.setCaretPosition(textArea.getDocument().getLength());
+
             }
-
-        }
-
-        this.textArea.append(formattedContent.toString() + "\r\n");
-        this.textArea.setCaretPosition(this.textArea.getDocument().getLength());
+        });
     }
 };

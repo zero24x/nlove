@@ -1,0 +1,4 @@
+{
+"zmqUrl": "tcp://node02.iotatoken.nl:5556",
+"apiHttpsHostname": "perma.iota.partners"
+}

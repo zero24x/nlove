@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -36,6 +37,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 
@@ -81,6 +83,7 @@ public class MainGui {
     private Thread userCountUpdateThread;
     private static JTextArea textAreaStatus;
     private JLabel lblUserCnt;
+    private JButton btnOpenHangout;
 
     /**
      * Launch the application.
@@ -180,6 +183,7 @@ public class MainGui {
             tabbedPaneMain.setSelectedIndex(0);
 
         } catch (Exception e2) {
+            e2.printStackTrace();
             JOptionPane.showMessageDialog(frmNloveA, "Could not save profile, error: " + e2.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
         this.setState();
@@ -187,7 +191,8 @@ public class MainGui {
 
     private void setState() throws WalletException, NKNClientException, NknHttpApiException {
         boolean profileEmpty = this.profileManager.profileIsEmpty();
-        this.getBtnRoll().setEnabled(!profileEmpty);
+        this.btnRoll.setEnabled(!profileEmpty);
+        this.btnOpenHangout.setEnabled(!profileEmpty);
         if (profileEmpty) {
             return;
         }
@@ -199,12 +204,15 @@ public class MainGui {
                     Thread.currentThread().setName("ClientCommandHandler");
                     cch = new ClientCommandHandler();
                     try {
+
                         frmNloveA.setCursor(new Cursor(Cursor.WAIT_CURSOR));
+                        btnOpenHangout.setEnabled(false);
                         btnRoll.setEnabled(false);
                         cch.start();
                         refreshUserCnt();
                         frmNloveA.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                         btnRoll.setEnabled(true);
+                        btnOpenHangout.setEnabled(true);
                     } catch (WalletException | NKNClientException | NknHttpApiException e1) {
                         // TODO Auto-generated catch block
                         e1.printStackTrace();
@@ -223,8 +231,12 @@ public class MainGui {
         try {
             subCnt = NKNExplorer.getSubscribers(ClientCommandHandler.LOBBY_TOPIC, 0).length;
             String userCnt = subCnt < 500 ? String.valueOf(subCnt) : String.valueOf(subCnt) + "+";
-            lblUserCnt.setText(userCnt);
-            LOG.info(String.format("Updated estimated user count to: %s", userCnt));
+            SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                    lblUserCnt.setText(userCnt);
+                    LOG.info(String.format("Updated estimated user count to: %s", userCnt));
+                }
+            });
         } catch (WalletException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -274,9 +286,9 @@ public class MainGui {
         tabbedPaneMain.setBounds(2, 0, 351, 196);
         frmNloveA.getContentPane().add(tabbedPaneMain);
 
-        JPanel roll = new JPanel();
-        tabbedPaneMain.addTab("Roll", null, roll, null);
-        roll.setLayout(null);
+        JPanel panelRoll = new JPanel();
+        tabbedPaneMain.addTab("Roll", null, panelRoll, null);
+        panelRoll.setLayout(null);
 
         btnRoll = new JButton("Roll");
         btnRoll.addActionListener(new ActionListener() {
@@ -306,25 +318,25 @@ public class MainGui {
         btnRoll.setEnabled(false);
         btnRoll.setIcon(new ImageIcon(MainGui.class.getResource("/resources/random.png")));
         btnRoll.setBounds(2, 97, 71, 23);
-        roll.add(btnRoll);
+        panelRoll.add(btnRoll);
 
         JLabel lblNewLabel = new JLabel("Welcome to nlove!");
         lblNewLabel.setAlignmentX(1.0f);
         lblNewLabel.setFont(new Font("Tahoma", Font.PLAIN, 13));
         lblNewLabel.setBounds(2, 0, 108, 23);
-        roll.add(lblNewLabel);
+        panelRoll.add(lblNewLabel);
 
         JLabel lblReadyToMeet = new JLabel("Ready to meet new people? Roll now!");
         lblReadyToMeet.setIconTextGap(0);
         lblReadyToMeet.setAlignmentX(1.0f);
         lblReadyToMeet.setVerticalAlignment(SwingConstants.TOP);
         lblReadyToMeet.setBounds(2, 47, 196, 23);
-        roll.add(lblReadyToMeet);
+        panelRoll.add(lblReadyToMeet);
 
         JLabel lblNewLabel_1 = new JLabel("");
         lblNewLabel_1.setIcon(new ImageIcon(MainGui.class.getResource("/resources/logo.png")));
         lblNewLabel_1.setBounds(208, 8, 128, 112);
-        roll.add(lblNewLabel_1);
+        panelRoll.add(lblNewLabel_1);
 
         JLabel lblWeWill = new JLabel("* you will be randomly matched");
         lblWeWill.setFont(new Font("Tahoma", Font.ITALIC, 11));
@@ -332,7 +344,7 @@ public class MainGui {
         lblWeWill.setIconTextGap(0);
         lblWeWill.setAlignmentX(1.0f);
         lblWeWill.setBounds(2, 134, 196, 14);
-        roll.add(lblWeWill);
+        panelRoll.add(lblWeWill);
 
         JLabel lblSponsoredByDappstatcentralml = new JLabel("<html><a href=''>Sponsored by DappStatCentral.ml</a></html>");
         lblSponsoredByDappstatcentralml.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -355,29 +367,29 @@ public class MainGui {
         lblSponsoredByDappstatcentralml.setFont(new Font("Tahoma", Font.PLAIN, 11));
         lblSponsoredByDappstatcentralml.setForeground(new Color(0, 0, 255));
         lblSponsoredByDappstatcentralml.setBounds(2, 148, 174, 14);
-        roll.add(lblSponsoredByDappstatcentralml);
+        panelRoll.add(lblSponsoredByDappstatcentralml);
 
         JLabel lblEstimatedSubscriberCount = new JLabel("Estimated online users:");
         lblEstimatedSubscriberCount.setFont(new Font("Tahoma", Font.PLAIN, 13));
         lblEstimatedSubscriberCount.setAlignmentX(1.0f);
         lblEstimatedSubscriberCount.setBounds(2, 22, 135, 23);
-        roll.add(lblEstimatedSubscriberCount);
+        panelRoll.add(lblEstimatedSubscriberCount);
 
         lblUserCnt = new JLabel("UNKNOWN");
         lblUserCnt.setFont(new Font("Tahoma", Font.PLAIN, 13));
         lblUserCnt.setAlignmentX(1.0f);
         lblUserCnt.setBounds(140, 22, 128, 23);
-        roll.add(lblUserCnt);
+        panelRoll.add(lblUserCnt);
 
-        JPanel profile = new JPanel();
-        profile.setBorder(new EmptyBorder(2, 2, 2, 2));
-        tabbedPaneMain.addTab("Profile", null, profile, null);
-        GridBagLayout gbl_profile = new GridBagLayout();
-        gbl_profile.columnWidths = new int[] { 99, 246, 0 };
-        gbl_profile.rowHeights = new int[] { 20, 20, 20, 20, 0, 0, 0 };
-        gbl_profile.columnWeights = new double[] { 1.0, 0.0, Double.MIN_VALUE };
-        gbl_profile.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, Double.MIN_VALUE };
-        profile.setLayout(gbl_profile);
+        JPanel panelProfile = new JPanel();
+        panelProfile.setBorder(new EmptyBorder(2, 2, 2, 2));
+        tabbedPaneMain.addTab("Profile", null, panelProfile, null);
+        GridBagLayout gbl_panelProfile = new GridBagLayout();
+        gbl_panelProfile.columnWidths = new int[] { 99, 246, 0 };
+        gbl_panelProfile.rowHeights = new int[] { 20, 20, 20, 20, 0, 0, 0 };
+        gbl_panelProfile.columnWeights = new double[] { 1.0, 0.0, Double.MIN_VALUE };
+        gbl_panelProfile.rowWeights = new double[] { 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, Double.MIN_VALUE };
+        panelProfile.setLayout(gbl_panelProfile);
 
         JLabel lblUsername = new JLabel("Username");
         GridBagConstraints gbc_lblUsername = new GridBagConstraints();
@@ -385,7 +397,7 @@ public class MainGui {
         gbc_lblUsername.insets = new Insets(0, 0, 5, 5);
         gbc_lblUsername.gridx = 0;
         gbc_lblUsername.gridy = 0;
-        profile.add(lblUsername, gbc_lblUsername);
+        panelProfile.add(lblUsername, gbc_lblUsername);
 
         textFieldUsername = new JTextField();
         GridBagConstraints gbc_textFieldUsername = new GridBagConstraints();
@@ -393,7 +405,7 @@ public class MainGui {
         gbc_textFieldUsername.insets = new Insets(0, 0, 5, 0);
         gbc_textFieldUsername.gridx = 1;
         gbc_textFieldUsername.gridy = 0;
-        profile.add(textFieldUsername, gbc_textFieldUsername);
+        panelProfile.add(textFieldUsername, gbc_textFieldUsername);
         textFieldUsername.setColumns(10);
 
         JLabel lblYearOfBirth = new JLabel("Year of birth");
@@ -402,7 +414,7 @@ public class MainGui {
         gbc_lblYearOfBirth.insets = new Insets(0, 0, 5, 5);
         gbc_lblYearOfBirth.gridx = 0;
         gbc_lblYearOfBirth.gridy = 1;
-        profile.add(lblYearOfBirth, gbc_lblYearOfBirth);
+        panelProfile.add(lblYearOfBirth, gbc_lblYearOfBirth);
 
         textFieldYearOfBirth = new JTextField();
         textFieldYearOfBirth.setColumns(10);
@@ -411,7 +423,7 @@ public class MainGui {
         gbc_textFieldYearOfBirth.insets = new Insets(0, 0, 5, 0);
         gbc_textFieldYearOfBirth.gridx = 1;
         gbc_textFieldYearOfBirth.gridy = 1;
-        profile.add(textFieldYearOfBirth, gbc_textFieldYearOfBirth);
+        panelProfile.add(textFieldYearOfBirth, gbc_textFieldYearOfBirth);
 
         JLabel lblGender = new JLabel("Gender");
         GridBagConstraints gbc_lblGender = new GridBagConstraints();
@@ -419,7 +431,7 @@ public class MainGui {
         gbc_lblGender.insets = new Insets(0, 0, 5, 5);
         gbc_lblGender.gridx = 0;
         gbc_lblGender.gridy = 2;
-        profile.add(lblGender, gbc_lblGender);
+        panelProfile.add(lblGender, gbc_lblGender);
 
         choiceGender = new Choice();
         Arrays.stream(Gender.values()).forEach(g -> choiceGender.add(g.toString()));
@@ -429,7 +441,7 @@ public class MainGui {
         gbc_choiceGender.insets = new Insets(0, 0, 5, 0);
         gbc_choiceGender.gridx = 1;
         gbc_choiceGender.gridy = 2;
-        profile.add(choiceGender, gbc_choiceGender);
+        panelProfile.add(choiceGender, gbc_choiceGender);
 
         JLabel lblAboutYou = new JLabel("About you");
         GridBagConstraints gbc_lblAboutYou = new GridBagConstraints();
@@ -438,7 +450,7 @@ public class MainGui {
         gbc_lblAboutYou.insets = new Insets(0, 0, 5, 5);
         gbc_lblAboutYou.gridx = 0;
         gbc_lblAboutYou.gridy = 3;
-        profile.add(lblAboutYou, gbc_lblAboutYou);
+        panelProfile.add(lblAboutYou, gbc_lblAboutYou);
 
         textAreaAboutYou = new JTextArea();
         textAreaAboutYou.setRows(4);
@@ -449,7 +461,7 @@ public class MainGui {
         gbc_textAreaAboutYou.fill = GridBagConstraints.BOTH;
         gbc_textAreaAboutYou.gridx = 0;
         gbc_textAreaAboutYou.gridy = 4;
-        profile.add(textAreaAboutYou, gbc_textAreaAboutYou);
+        panelProfile.add(textAreaAboutYou, gbc_textAreaAboutYou);
 
         JButton btnSave = new JButton("Save");
         btnSave.addActionListener(new ActionListener() {
@@ -473,7 +485,47 @@ public class MainGui {
         gbc_btnSave.insets = new Insets(0, 0, 0, 5);
         gbc_btnSave.gridx = 0;
         gbc_btnSave.gridy = 5;
-        profile.add(btnSave, gbc_btnSave);
+        panelProfile.add(btnSave, gbc_btnSave);
+
+        JPanel panelHangout = new JPanel();
+        tabbedPaneMain.addTab("Hangout", null, panelHangout, null);
+        panelHangout.setLayout(null);
+
+        JLabel lblHangoutZone = new JLabel("Hangout zone");
+        lblHangoutZone.setFont(new Font("Tahoma", Font.PLAIN, 13));
+        lblHangoutZone.setBounds(2, 8, 272, 14);
+        panelHangout.add(lblHangoutZone);
+
+        JLabel lblInTheHangout = new JLabel("<html>Free chat zone to meet new acquaintances.</html>");
+        lblInTheHangout.setVerticalAlignment(SwingConstants.TOP);
+        lblInTheHangout.setFont(new Font("Tahoma", Font.PLAIN, 11));
+        lblInTheHangout.setBounds(2, 33, 338, 14);
+        panelHangout.add(lblInTheHangout);
+
+        btnOpenHangout = new JButton("Open Hangout");
+        btnOpenHangout.setEnabled(false);
+        btnOpenHangout.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            }
+        });
+        btnOpenHangout.setIcon(new ImageIcon(MainGui.class.getResource("/resources/arrow-right.png")));
+        btnOpenHangout.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                (new Thread(new Runnable() {
+                    public void run() {
+                        Thread.currentThread().setName("HangoutDialog");
+                        HangoutDialog hd = new HangoutDialog(frmNloveA, true);
+                        hd.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+                        hd.setVisible(true);
+
+                    }
+                })).start();
+
+            }
+        });
+        btnOpenHangout.setBounds(2, 58, 123, 25);
+        panelHangout.add(btnOpenHangout);
 
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -524,5 +576,9 @@ public class MainGui {
 
     public JLabel getLblUserCnt() {
         return lblUserCnt;
+    }
+
+    public JButton getBtnOpenHangout() {
+        return btnOpenHangout;
     }
 }
