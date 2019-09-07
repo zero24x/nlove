@@ -39,7 +39,7 @@ public class ShowMatchDialog extends JDialog {
         super(owner, modal);
 
         setTitle("nlove");
-        setIconImage(Toolkit.getDefaultToolkit().getImage(ShowMatchDialog.class.getResource("/main/resources/logo.png")));
+        setIconImage(Toolkit.getDefaultToolkit().getImage(ShowMatchDialog.class.getResource("/resources/logo.png")));
         setBounds(100, 100, 450, 300);
         getContentPane().setLayout(new BorderLayout());
         contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));

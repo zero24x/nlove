@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src/main/java"/>
-	<classpathentry kind="src" path="src/main/resources"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
 		<attributes>
 			<attribute name="maven.pomderived" value="true"/>
@@ -16,5 +14,25 @@
 	<classpathentry kind="lib" path="C:/Program Files/eclipse/plugins/org.eclipse.core.databinding_1.7.400.v20190513-2118.jar" sourcepath="C:/Program Files/eclipse/plugins/org.eclipse.core.databinding_1.7.400.v20190513-2118.jar"/>
 	<classpathentry kind="lib" path="C:/Program Files/eclipse/plugins/org.eclipse.core.databinding.observable_1.7.0.v20190515-0910.jar" sourcepath="C:/Program Files/eclipse/plugins/org.eclipse.core.databinding.observable_1.7.0.v20190515-0910.jar"/>
 	<classpathentry kind="lib" path="C:/Program Files/eclipse/plugins/org.eclipse.jface.databinding_1.9.0.v20190519-0933.jar" sourcepath="C:/Program Files/eclipse/plugins/org.eclipse.jface.databinding_1.9.0.v20190519-0933.jar"/>
+	<classpathentry kind="src" output="target/classes" path="src/main/resources">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="src/main/java"/>
+	<classpathentry kind="src" path="nkn-java-sdk/src/main/java"/>
+	<classpathentry kind="src" output="target/test-classes" path="src/test/java">
+		<attributes>
+			<attribute name="test" value="true"/>
+			<attribute name="optional" value="true"/>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry excluding="**/api/test/omi/*.java" kind="src" output="target/classes" path="Users/wolfgang/Documents/Privat/Coins/Dev/nkn/nlove">
+		<attributes>
+			<attribute name="optional" value="true"/>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

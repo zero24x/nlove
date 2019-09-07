@@ -1,0 +1,3 @@
+[submodule "nkn-java-sdk"]
+	path = nkn-java-sdk
+	url = https://github.com/nknorg/nkn-java-sdk.git

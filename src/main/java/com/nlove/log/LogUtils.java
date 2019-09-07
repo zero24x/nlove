@@ -1,4 +1,4 @@
-package jsmith.nknsdk.examples;
+package com.nlove.log;
 
 import java.io.File;
 
@@ -48,21 +48,19 @@ public class LogUtils {
             TPLogger.INFO();
         }
 
+        System.out.flush(); //TODO: Why is this needed to make textarealogger work?!
+        
         FileLogFunction fileLog = new FileLogFunction(new TimeFormatter.AbsoluteTimeFormatter(),
                 new LogFileHandler(new File("logs"), new DateTimeFileCreationStrategy(DateTimeFileCreationStrategy.DEFAULT_DATE_FILE_NAME_FORMATTER, true,
                         DateTimeFileCreationStrategy.DEFAULT_LOG_FILE_EXTENSION, 512 * 1000, Duration.standardDays(60)), true),
                 true);
 
-        if (logTextArea != null) {
-            SimpleLogFunction textAreaLog = new TextAreaLogFunction(logTextArea);
-            if (level > TPLogger.DEBUG) {
-                TPLogger.setLogFunction(new LogFilter(new LogFunctionMultiplexer(textAreaLog, fileLog)));
-            } else {
-                TPLogger.setLogFunction(new LogFilter(new LogFunctionMultiplexer(textAreaLog, SimpleLogFunction.CONSOLE_LOG_FUNCTION, fileLog)));
-            }
-
+        SimpleLogFunction textAreaLog = new TextAreaLogFunction(logTextArea);
+        
+        if (level > TPLogger.DEBUG) {
+            TPLogger.setLogFunction(new LogFilter(new LogFunctionMultiplexer(textAreaLog, fileLog)));
         } else {
-            TPLogger.setLogFunction(new LogFilter(new LogFunctionMultiplexer(SimpleLogFunction.CONSOLE_LOG_FUNCTION, fileLog)));
+            TPLogger.setLogFunction(new LogFilter(new LogFunctionMultiplexer(textAreaLog, SimpleLogFunction.CONSOLE_LOG_FUNCTION, fileLog)));
         }
 
         TPLoggerFactory.USE_SHORT_NAMES = false;

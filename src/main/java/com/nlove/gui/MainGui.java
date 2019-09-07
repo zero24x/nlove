@@ -9,6 +9,7 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -53,11 +54,11 @@ import com.nlove.config.Gender;
 import com.nlove.config.NloveProfile;
 import com.nlove.config.NloveProfileManager;
 import com.nlove.handler.ClientCommandHandler;
+import com.nlove.log.LogUtils;
 
 import jsmith.nknsdk.client.NKNClientException;
 import jsmith.nknsdk.client.NKNExplorer;
-import jsmith.nknsdk.examples.LogUtils;
-import jsmith.nknsdk.network.NknHttpApiException;
+import jsmith.nknsdk.client.NKNExplorerException;
 import jsmith.nknsdk.wallet.WalletException;
 
 public class MainGui {
@@ -109,11 +110,11 @@ public class MainGui {
      * @throws NKNClientException
      * @throws WalletException
      */
-    public MainGui() throws WalletException, NKNClientException, NknHttpApiException {
+    public MainGui() throws WalletException, NKNClientException {
         initialize();
     }
 
-    private void initializeGui() throws WalletException, NKNClientException, NknHttpApiException {
+    private void initializeGui() throws WalletException, NKNClientException {
         String version = MainGui.class.getPackage().getImplementationVersion();
         if (version != null) {
             LOG.info("Nlove version: {}", version);
@@ -145,7 +146,7 @@ public class MainGui {
         LOG.info("Loading, please wait...");
     }
 
-    private void saveProfile() throws WalletException, NKNClientException, NknHttpApiException {
+    private void saveProfile() throws WalletException, NKNClientException {
 
         try {
             String username = textFieldUsername.getText();
@@ -188,7 +189,7 @@ public class MainGui {
         this.setState();
     }
 
-    private void setState() throws WalletException, NKNClientException, NknHttpApiException {
+    private void setState() throws WalletException, NKNClientException {
         boolean profileEmpty = this.profileManager.profileIsEmpty();
         this.btnRoll.setEnabled(!profileEmpty);
         this.btnOpenHangout.setEnabled(!profileEmpty);
@@ -212,7 +213,7 @@ public class MainGui {
                         frmNloveA.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
                         btnRoll.setEnabled(true);
                         btnOpenHangout.setEnabled(true);
-                    } catch (WalletException | NKNClientException | NknHttpApiException e1) {
+                    } catch (WalletException | NKNClientException | NKNExplorerException e1) {
                         // TODO Auto-generated catch block
                         e1.printStackTrace();
                     }
@@ -226,17 +227,16 @@ public class MainGui {
     }
 
     private void refreshUserCnt() {
-        int subCnt;
+
         try {
-            subCnt = NKNExplorer.getSubscribers(ClientCommandHandler.LOBBY_TOPIC, 0).length;
-            String userCnt = subCnt < 500 ? String.valueOf(subCnt) : String.valueOf(subCnt) + "+";
+            int subCnt = NKNExplorer.Subscription.getSubscriberCount(ClientCommandHandler.LOBBY_TOPIC);
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-                    lblUserCnt.setText(userCnt);
-                    LOG.info(String.format("Updated estimated user count to: %s", userCnt));
+                    lblUserCnt.setText(String.valueOf(subCnt));
+                    LOG.info(String.format("Updated estimated user count to: %s", subCnt));
                 }
             });
-        } catch (WalletException e) {
+        } catch (NKNExplorerException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
@@ -252,7 +252,7 @@ public class MainGui {
             public void windowOpened(WindowEvent e) {
                 try {
                     initializeGui();
-                } catch (WalletException | NKNClientException | NknHttpApiException e1) {
+                } catch (WalletException | NKNClientException e1) {
                     // TODO Auto-generated catch block
                     e1.printStackTrace();
                 }
@@ -261,10 +261,10 @@ public class MainGui {
 
             @Override
             public void windowClosing(WindowEvent e) {
+                frmNloveA.setCursor(new Cursor(Cursor.WAIT_CURSOR));
                 executor.shutdown();
-                if (clientCommandHandlerThread != null) {
-                    clientCommandHandlerThread.interrupt();
-                }
+                cch.stopClient();
+
                 if (rollThread != null) {
                     rollThread.interrupt();
                 }
@@ -273,7 +273,7 @@ public class MainGui {
                 }
             }
         });
-        // frmNloveA.setIconImage(Toolkit.getDefaultToolkit().getImage(MainGui.class.getResource("/src/main/resources/logo.png")));
+        frmNloveA.setIconImage(Toolkit.getDefaultToolkit().getImage(MainGui.class.getResource("/resources/logo.png")));
         frmNloveA.setResizable(false);
         frmNloveA.setTitle("Nlove");
         frmNloveA.setBounds(100, 100, 369, 371);
@@ -303,7 +303,7 @@ public class MainGui {
                         try {
                             btnRoll.setEnabled(false);
                             cch.roll();
-                        } catch (WalletException | InterruptedException e) {
+                        } catch (WalletException | InterruptedException | NKNExplorerException e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
                         } finally {
@@ -315,7 +315,7 @@ public class MainGui {
             }
         });
         btnRoll.setEnabled(false);
-        btnRoll.setIcon(new ImageIcon(MainGui.class.getResource("/main/resources/random.png")));
+        btnRoll.setIcon(new ImageIcon(MainGui.class.getResource("/resources/random.png")));
         btnRoll.setBounds(2, 97, 71, 23);
         panelRoll.add(btnRoll);
 
@@ -333,7 +333,7 @@ public class MainGui {
         panelRoll.add(lblReadyToMeet);
 
         JLabel lblNewLabel_1 = new JLabel("");
-        lblNewLabel_1.setIcon(new ImageIcon(MainGui.class.getResource("/main/resources/logo.png")));
+        lblNewLabel_1.setIcon(new ImageIcon(MainGui.class.getResource("/resources/logo.png")));
         lblNewLabel_1.setBounds(208, 8, 128, 112);
         panelRoll.add(lblNewLabel_1);
 
@@ -472,13 +472,13 @@ public class MainGui {
             public void mouseClicked(MouseEvent e) {
                 try {
                     saveProfile();
-                } catch (WalletException | NKNClientException | NknHttpApiException e1) {
+                } catch (WalletException | NKNClientException e1) {
                     // TODO Auto-generated catch block
                     e1.printStackTrace();
                 }
             }
         });
-        btnSave.setIcon(new ImageIcon(MainGui.class.getResource("/main/resources/save.png")));
+        btnSave.setIcon(new ImageIcon(MainGui.class.getResource("/resources/save.png")));
         GridBagConstraints gbc_btnSave = new GridBagConstraints();
         gbc_btnSave.anchor = GridBagConstraints.WEST;
         gbc_btnSave.insets = new Insets(0, 0, 0, 5);
@@ -507,7 +507,7 @@ public class MainGui {
             public void actionPerformed(ActionEvent e) {
             }
         });
-        btnOpenHangout.setIcon(new ImageIcon(MainGui.class.getResource("/main/resources/arrow-right.png")));
+        btnOpenHangout.setIcon(new ImageIcon(MainGui.class.getResource("/resources/arrow-right.png")));
         btnOpenHangout.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {

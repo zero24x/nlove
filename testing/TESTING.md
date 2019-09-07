@@ -19,7 +19,7 @@
 
 #### Closing test (In match window)
 
-4. Press "Close" button --> Should: Close Window
+4. Press "OK" button --> Should: Close Window
 
 ### Hangout
 
