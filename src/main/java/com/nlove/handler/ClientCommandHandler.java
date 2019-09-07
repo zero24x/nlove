@@ -158,7 +158,7 @@ public class ClientCommandHandler {
 
         while (doTry) {
             int subscriberCount = NKNExplorer.Subscription.getSubscriberCount(LOBBY_TOPIC);
-            int subscriberIndex = (subscriberCount > 1 ? rnd.nextInt(subscriberCount - 1) : 0);
+            int subscriberIndex = subscriberCount > 1 ? rnd.nextInt(subscriberCount) : 0;
 
             LinkedList<Subscriber> subscribers = new LinkedList<Subscriber>(
                     Arrays.asList(NKNExplorer.Subscription.getSubscribers(ClientCommandHandler.LOBBY_TOPIC, subscriberIndex, 1, false, true)));
