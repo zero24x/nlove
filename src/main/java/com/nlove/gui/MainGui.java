@@ -263,7 +263,9 @@ public class MainGui {
             public void windowClosing(WindowEvent e) {
                 frmNloveA.setCursor(new Cursor(Cursor.WAIT_CURSOR));
                 executor.shutdown();
-                cch.stopClient();
+                if (cch != null) {
+                    cch.stopClient();
+                }
 
                 if (rollThread != null) {
                     rollThread.interrupt();
